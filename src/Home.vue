@@ -3,7 +3,7 @@
     <div class="field vocabulary" @click="setRoute('vocabulary')">
       Słownictwo
     </div>
-    <div class="field test">
+    <div class="field test" @click="setRoute('test')">
       Test
     </div>
     <div class="field stats">

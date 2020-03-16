@@ -1,11 +1,11 @@
 <template>
   <div class="page-container">
       <md-toolbar>
-        <span class="md-title">Vocabulary Helper</span>
+        <span class="md-title" @click="setRoute('home')">Vocabulary Helper</span>
       </md-toolbar>
 
       
-        <router-view></router-view>
+      <router-view></router-view>
   </div>
 </template>
 
@@ -18,6 +18,11 @@ export default {
   data(){
     return {
       menuVisible: false,
+    }
+  },
+  methods: {
+    setRoute(key){
+      this.$router.push({ name: key});
     }
   }
 }
@@ -39,5 +44,11 @@ export default {
 }
 .md-title {
   color: black !important;
+  cursor: pointer;
+  transition: 0.5s;
+}
+.md-title:hover {
+  color: rgb(180, 43, 2) !important;
+  transform: scale(0.95);
 }
 </style>

@@ -1,0 +1,12 @@
+{
+    "name": "michal/vocabulary",
+    "authors": [
+        {
+            "name": "Michał Skwara",
+            "email": "michalon2000@gmail.com"
+        }
+    ],
+    "require": {
+        "slim/slim": "^3"
+    }
+}

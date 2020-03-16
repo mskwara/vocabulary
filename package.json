@@ -3,14 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "api": "cd public && php -S localhost:8000 api.php",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "bootstrap": "^4.4.1",
     "core-js": "^3.6.4",
+    "numeral": "^2.0.6",
     "vue": "^2.6.11",
+    "vue-d3-charts": "^0.2.8",
     "vue-material": "^1.0.0-beta-11",
+    "vue-resource": "^1.5.1",
     "vue-router": "^3.1.6"
   },
   "devDependencies": {
