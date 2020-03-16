@@ -1,8 +1,14 @@
 <template>
   <div class="page">
     <div class="panel">
-      <select class="custom-select" v-model="activeDictionary" :disabled="testRunning">
+      <label class="selectLabel">Wybierz słownik</label>
+      <select class="custom-select" v-model="activeDictionary" @change="getLists()" :disabled="testRunning">
         <option :value="dict" :key="dict.id" v-for="dict in dictionaries">{{getDictTitle(dict)}}</option>
+      </select>
+
+      <label class="selectLabel">Wybierz listę</label>
+      <select class="custom-select" v-model="activeList" :disabled="testRunning">
+        <option :value="list" :key="list.id" v-for="list in lists">{{list.title}}</option>
       </select>
 
       <p class="header">Język odpowiedzi</p>
@@ -16,7 +22,8 @@
           <label class="custom-control-label labellang" for="radio2">{{activeDictionary.lang2}}</label>
         </div>
       </div>
-      <button type="button" class="btn btn-success" @click="start()" :disabled="answerLang == null || testRunning">Rozpocznij</button>
+      <button type="button" class="btn btn-success" @click="start()" 
+      :disabled="answerLang == null || activeList == null || testRunning">Rozpocznij</button>
     </div>
 
 
@@ -29,6 +36,13 @@
         <label class="labellang" v-else>{{activeDictionary.lang2}}</label>
         <md-input ref="answer" v-model="answer"></md-input>
       </md-field>
+      <div class="hint">
+        <transition name="fade">
+          <div v-if="hintVisible">
+            <p class="help">{{hintText}}</p>
+          </div>
+        </transition>
+      </div>
       <button type="button" class="btn btn-primary accept" @click="accept()">Zatwierdź</button>
     </div>
 
@@ -51,6 +65,7 @@ export default {
       activeDictionary: [],
       answer: "",
       dictionaries: [],
+      lists: [],
       words: [],
       answerLang: null,
       activeWord: {},
@@ -59,12 +74,15 @@ export default {
         correct: 0,
         all: 0,
         difficultWords: [],
-        dictId: null,
+        listId: null,
         userId: 0,
       },
       displayResults: false,
       displayResultsText: "",
       remaining: 0,
+      hintVisible: false,
+      hintText: "",
+      hintTimeout: null,
     }
   },
   mounted(){
@@ -80,17 +98,27 @@ export default {
       this.$http.get('dictionaries/0').then(response => {
         this.dictionaries = response.body;
         this.activeDictionary = this.dictionaries[0];
+        this.$http.get('lists/'+this.activeDictionary.id).then(response => {
+          this.lists = response.body;
+          this.activeList = this.lists[0];
+        });
       });
     },
+    getLists(){
+      this.$http.get('lists/'+this.activeDictionary.id).then(response => {
+          this.lists = response.body;
+          this.activeList = this.lists[0];
+        });
+    },
     getWordsAndRun(){
-      this.$http.get('words/'+this.activeDictionary.id).then(response => {
+      this.$http.get('words/'+this.activeList.id).then(response => {
         this.words = response.body;
         this.shuffleArray(this.words);
         this.testRunning = true;
         this.result.correct = 0;
         this.result.all = this.words.length;
         this.result.difficultWords = [];
-        this.result.dictId = this.activeDictionary.id;
+        this.result.listId = this.activeList.id;
         this.remaining = this.words.length;
         this.displayNextWord();
       });
@@ -166,6 +194,17 @@ export default {
           this.displayNextWord();
         }
         else {
+          if(this.answerLang == 2){
+            this.hintText = this.activeWord.lang1+" - "+this.activeWord.lang2;
+          }
+          else {
+            this.hintText = this.activeWord.lang2+" - "+this.activeWord.lang1;
+          }
+          clearTimeout(this.hintTimeout);
+          this.hintVisible = true;
+          this.hintTimeout = setTimeout(() => {
+            this.hintVisible = false;
+          }, 5000);
           this.addToDifficultWords(this.activeWord);
           this.shuffleActiveWord(this.words);
           this.displayNextWord();
@@ -249,5 +288,20 @@ button {
 }
 .accept {
   width: 50% !important;
+}
+.help {
+  margin: 0;
+}
+.hint {
+  height: 20px;
+}
+
+
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 1s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
 }
 </style>

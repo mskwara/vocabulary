@@ -6,7 +6,7 @@
     <div class="field test" @click="setRoute('test')">
       Test
     </div>
-    <div class="field stats">
+    <div class="field stats" @click="setRoute('stats')">
       Statystyki
     </div>
   </div>

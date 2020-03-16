@@ -3,11 +3,15 @@ import App from './App.vue'
 import Home from './Home.vue'
 import Vocabulary from './Vocabulary.vue'
 import Test from './Test.vue'
+import Stats from './Stats.vue'
 import VueMaterial from 'vue-material'
 import 'vue-material/dist/vue-material.min.css'
 import VueRouter from 'vue-router'
 import VueResource from 'vue-resource';
 Vue.use(VueResource);
+import VueGraph from 'vue-graph';
+ 
+Vue.use(VueGraph);
 
 import 'bootstrap/dist/css/bootstrap.css'
 
@@ -22,6 +26,7 @@ const routes = [
   { path: '/', name: 'home', component: Home },
   { path: '/vocabulary', name: 'vocabulary', component: Vocabulary },
   { path: '/test', name: 'test', component: Test },
+  { path: '/stats', name: 'stats', component: Stats },
 ]
 
 const router = new VueRouter({

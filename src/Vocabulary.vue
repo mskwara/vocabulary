@@ -41,7 +41,7 @@
             <md-input v-model="newList.title"></md-input>
           </md-field>
         </span>
-        <button type="button" class="btn btn-warning" @click="addList()" :disabled="newList.title == ''">Dodaj listę</button>
+        <button type="button" class="btn btn-info" @click="addList()" :disabled="newList.title == ''">Dodaj listę</button>
       </div>
 
     <div class="table">
@@ -242,7 +242,7 @@ button {
   font-size: 15pt;
 }
 .newdict {
-  margin-top: 50px;
+  margin-top: 20px;
 }
 .custom-select {
   width: 90%;

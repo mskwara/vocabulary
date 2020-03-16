@@ -43,8 +43,9 @@ export default {
   margin-bottom: 30px;
 }
 .md-title {
-  color: black !important;
+  color: rgb(56, 56, 56) !important;
   cursor: pointer;
+  font-family: Sui Generis;
   transition: 0.5s;
 }
 .md-title:hover {

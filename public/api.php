@@ -318,4 +318,83 @@ $app->post('/api/stats/add',
 
 );
 
+$app->get('/api/stats/{listId}',
+    function (Request $request, Response $response, array $args) {
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "FellDell2000!";
+        $dbname = "32213694_vocabulary";
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $listId = $args['listId'];
+        $sql = "SELECT * FROM stats WHERE listId = $listId";
+        $result = $conn->query($sql);
+        $array = [];
+
+        if ($result->num_rows > 0) {
+            // output data of each row
+            while($row = $result->fetch_assoc()) {
+                $percent = round($row['correct']/$row['allCount'], 2)*100;
+                $array[] = $percent;
+            }
+        } else {
+            echo "0 results";
+        }
+        $conn->close();
+        return $response->withJson($array);
+    }
+);
+
+$app->get('/api/stats/allLists/{dictId}',
+    function (Request $request, Response $response, array $args) {
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "FellDell2000!";
+        $dbname = "32213694_vocabulary";
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $dictId = $args['dictId'];
+        $sql = "SELECT id, title FROM lists WHERE dictId = $dictId";
+        $result = $conn->query($sql);
+        $listsIds = [];
+        $listsTitles = [];
+        if ($result->num_rows > 0) {
+            // output data of each row
+            while($row = $result->fetch_assoc()) {
+                $listsIds[] = $row['id'];
+                $listsTitles[] = $row['title'];
+            }
+        }
+        $allValues = [];
+        for($i = 0 ; $i < count($listsIds) ; $i = $i + 1){
+            $listId = $listsIds[$i];
+            $sql1 = "SELECT * FROM stats WHERE listId = $listId";
+            $result = $conn->query($sql1);
+
+            $values = [];
+            if ($result->num_rows > 0) {
+                // output data of each row
+                while($row = $result->fetch_assoc()) {
+                    $percent = round($row['correct']/$row['allCount'], 2)*100;
+                    $values[] = $percent;
+                }
+            }
+            $allValues[] = $values;
+        }
+        $array = [
+            ['values' => $allValues, 'listsTitles' => $listsTitles]
+         ];
+        $conn->close();
+        return $response->withJson($array);
+    }
+);
+
 $app->run();
