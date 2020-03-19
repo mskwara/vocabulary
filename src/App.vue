@@ -2,6 +2,7 @@
   <div class="page-container">
       <md-toolbar>
         <span class="md-title" @click="setRoute('home')">Vocabulary Helper</span>
+        <a class="logout" @click="logout()">Wyloguj</a>
       </md-toolbar>
 
       
@@ -10,6 +11,7 @@
 </template>
 
 <script>
+import service from "./service.js";
 
 export default {
   name: 'App',
@@ -17,13 +19,29 @@ export default {
   },
   data(){
     return {
-      menuVisible: false,
+    }
+  },
+  mounted() {
+    if(!service.authenticated) {
+        this.$router.replace({ name: "login" });
+    }
+    else {
+      this.$router.push({ name: "home" });
     }
   },
   methods: {
     setRoute(key){
       this.$router.push({ name: key});
-    }
+    },
+    setAuthenticated(status){
+      service.authenticated = status;
+    },
+    logout(){
+      service.authenticated = false;
+      service.id = null;
+      service.nick = "";
+      this.$router.replace({ name: "login" });
+    },
   }
 }
 </script>
@@ -51,5 +69,10 @@ export default {
 .md-title:hover {
   color: rgb(180, 43, 2) !important;
   transform: scale(0.95);
+}
+.logout {
+  position: absolute;
+  right: 20px;
+  cursor: pointer;
 }
 </style>

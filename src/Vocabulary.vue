@@ -1,93 +1,96 @@
 <template>
-  <div class="page">
-    <div class="panel">
-      <label class="selectLabel">Wybierz słownik</label>
-      <select class="custom-select" v-model="activeDictionary" @change="getLists()" v-if="dictionaries != null">
-        <option :value="dict" :key="dict.id" v-for="dict in dictionaries">{{getDictTitle(dict)}}</option>
-      </select>
-      <select class="custom-select" v-else>
-        <option disabled selected>Brak dostępnych słowników</option>
-      </select>
+  <div>
+    <spinner v-if="loading" />
+    <div class="page" v-if="!loading">
+      <div class="panel">
+        <label class="selectLabel">Wybierz słownik</label>
+        <select class="custom-select" v-model="activeDictionary" @change="getLists()" v-if="dictionaries != null">
+          <option :value="dict" :key="dict.id" v-for="dict in dictionaries">{{getDictTitle(dict)}}</option>
+        </select>
+        <select class="custom-select" v-else>
+          <option disabled selected>Brak dostępnych słowników</option>
+        </select>
 
+        <label class="selectLabel" v-if="activeDictionary != null">Wybierz listę</label>
+        <select class="custom-select" v-model="activeList" @change="getWords()" v-if="lists != null && activeDictionary != null">
+          <option :value="list" :key="list.id" v-for="list in lists">{{list.title}}</option>
+        </select>
+        <select class="custom-select" v-if="lists == null && activeDictionary != null">
+          <option disabled selected>Brak dostępnych list</option>
+        </select>
 
-      <label class="selectLabel">Wybierz listę</label>
-      <select class="custom-select" v-model="activeList" @change="getWords()" v-if="lists != null">
-        <option :value="list" :key="list.id" v-for="list in lists">{{list.title}}</option>
-      </select>
-      <select class="custom-select" v-else>
-        <option disabled selected>Brak dostępnych list</option>
-      </select>
-
-
-      
-
-      <p class="header newdict">Nowy słownik</p>
-      <span class="dual">
-        <md-field class="leftinput">
-          <label>Pierwszy język</label>
-          <md-input v-model="newDict.lang1"></md-input>
-        </md-field>
-        <md-field>
-          <label>Drugi język</label>
-          <md-input v-model="newDict.lang2"></md-input>
-        </md-field>
-      </span>
-      <button type="button" class="btn btn-warning" @click="addDictionary()" :disabled="newDict.lang1 == '' || newDict.lang2 == ''">Dodaj słownik</button>
-      
-      <p class="header newdict">Nowa lista w słowniku</p>
+        <p class="header newdict">Nowy słownik</p>
         <span class="dual">
           <md-field class="leftinput">
-            <label>Nazwa listy</label>
-            <md-input v-model="newList.title"></md-input>
+            <label>Pierwszy język</label>
+            <md-input v-model="newDict.lang1"></md-input>
+          </md-field>
+          <md-field>
+            <label>Drugi język</label>
+            <md-input v-model="newDict.lang2"></md-input>
           </md-field>
         </span>
-        <button type="button" class="btn btn-info" @click="addList()" :disabled="newList.title == ''">Dodaj listę</button>
+        <button type="button" class="btn btn-warning" @click="addDictionary()" :disabled="newDict.lang1 == '' || newDict.lang2 == ''">Dodaj słownik</button>
+        
+        <p class="header newdict" v-if="activeDictionary != null">Nowa lista w słowniku</p>
+        <md-field class="listinput" v-if="activeDictionary != null">
+          <label>Nazwa listy</label>
+          <md-input v-model="newList.title"></md-input>
+        </md-field>
+        <button v-if="activeDictionary != null" type="button" class="btn btn-info" @click="addList()" :disabled="activeDictionary == null || newList.title == ''">Dodaj listę</button>
       </div>
 
-    <div class="table">
-      <p class="header">Dodaj słówko</p>
-      <span class="dual">
-        <md-field class="leftinput">
-          <label class="labellang">{{activeDictionary.lang1}}</label>
-          <md-input ref="lang1" v-model="newWord.lang1"></md-input>
-        </md-field>
-        <md-field>
-          <label class="labellang">{{activeDictionary.lang2}}</label>
-          <md-input v-model="newWord.lang2"></md-input>
-        </md-field>
-      </span>
-      <button type="button" class="btn btn-primary" @click="addWord()" :disabled="newWord.lang1 == '' || newWord.lang2 == ''">Wstaw słówko</button>
-
-      <div class="words" v-if="words != null && words.length > 0">
-        <ul class="list-group">
-          <li class="list-group-item word" :key="word.id" v-for="word in words">
-            <div class="wordAndDiff">
-              <p class="wordContent">{{getWordTitle(word)}}</p>
-              <div class="difficultyDot" v-if="word.testsCount != 0" :style="styleDifficulty(word)"></div>
-            </div>
-            <img class="delete" src="./assets/cancel.svg" @click="deleteWord(word)" />
-          </li>
-        </ul>
-      </div>
-      <div class="words" v-else>
-        Brak słówek w tej liście!
+      <div class="table" v-if="activeList != null">
+        <p class="header">Dodaj słówko</p>
+        <span class="dual">
+          <md-field class="leftinput wordinput">
+            <label class="labellang">{{activeDictionary.lang1}}</label>
+            <md-input ref="lang1" v-model="newWord.lang1"></md-input>
+          </md-field>
+          <md-field class="wordinput">
+            <label class="labellang">{{activeDictionary.lang2}}</label>
+            <md-input v-model="newWord.lang2"></md-input>
+          </md-field>
+        </span>
+        <button type="button" class="btn btn-primary" @click="addWord()" :disabled="newWord.lang1 == '' || newWord.lang2 == ''">Wstaw słówko</button>
+        
+        <div class="spinner-grow text-primary loadingnewword" role="status" v-if="loadingNewWord">
+          <span class="sr-only">Loading...</span>
+        </div>
+        <div class="words" v-if="words != null && words.length > 0">
+          <ul class="list-group">
+            <li class="list-group-item word" :key="word.id" v-for="word in words">
+              <div class="wordAndDiff">
+                <p class="wordContent">{{getWordTitle(word)}}</p>
+                <div class="difficultyDot" v-if="word.testsCount != 0" :style="styleDifficulty(word)"></div>
+              </div>
+              <img class="delete" src="./assets/cancel.svg" @click="deleteWord(word)" />
+            </li>
+          </ul>
+        </div>
+        <div class="words" v-else>
+          Brak słówek w tej liście!
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import Spinner from './Spinner.vue';
+import service from './service.js';
 
 export default {
   name: 'Vocabulary',
   components: {
+    Spinner
   },
   data(){
     return {
-      activeDictionary: [],
-      activeList: [],
+      activeDictionary: null,
+      activeList: null,
       newDict: {
-        userId: 0,
+        userId: service.id,
         lang1: "",
         lang2: ""
       },
@@ -100,9 +103,11 @@ export default {
         dictId: null,
         title: "",
       },
-      dictionaries: [],
-      lists: [],
-      words: []
+      dictionaries: null,
+      lists: null,
+      words: null,
+      loading: true,
+      loadingNewWord: false,
     }
   },
   mounted(){
@@ -127,14 +132,28 @@ export default {
       this.getDictionaries();
     },
     getDictionaries(){
-      this.$http.get('dictionaries/0').then(response => {
-        this.dictionaries = response.body;
-        this.activeDictionary = this.dictionaries[0];
-        this.$http.get('lists/'+this.activeDictionary.id).then(response => {
-          this.lists = response.body;
-          this.activeList = this.lists[0];
-          this.getWords();
-        });
+      this.$http.get('dictionaries/'+service.id).then(response => {
+        if(response.body != null){
+          this.dictionaries = response.body;
+          this.activeDictionary = this.dictionaries[0];
+          this.$http.get('lists/'+this.activeDictionary.id).then(response => {
+            if(response.body != null){
+              this.lists = response.body;
+              this.activeList = this.lists[0];
+              this.getWords();
+            }
+            else {
+              this.lists = null;
+              this.activeList = null;
+              this.loading = false;
+            }
+          });
+        }
+        else {
+          this.dictionaries = null;
+          this.activeDictionary = null;
+          this.loading = false;
+        }
       });
     },
     getLists(){
@@ -153,6 +172,8 @@ export default {
       if(this.activeList != null){
         this.$http.get('words/'+this.activeList.id).then(response => {
           this.words = response.body;
+          this.loading = false;
+          this.loadingNewWord = false;
         });
       }
       else {
@@ -167,6 +188,7 @@ export default {
       return word.lang1+" - "+word.lang2;
     },
     addWord(){
+      this.loadingNewWord = true;
       this.newWord.listId = this.activeList.id;
       this.$http.post('word/add', this.newWord);
       this.newWord.lang1 = "";
@@ -287,5 +309,11 @@ button {
   width: 90% !important;
   margin-top: 30px;
   text-align: center;
+}
+.listinput {
+  width: 90%;
+}
+.loadingnewword {
+  margin-top: 10px;
 }
 </style>

@@ -10,7 +10,7 @@ $app->get('/api/dictionaries/{userId}',
     function (Request $request, Response $response, array $args) {
         $servername = "serwer2001916.home.pl";
         $username = "32213694_vocabulary";
-        $password = "FellDell2000!";
+        $password = "vocpassword123";
         $dbname = "32213694_vocabulary";
         // Create connection
         $conn = new mysqli($servername, $username, $password, $dbname);
@@ -40,7 +40,7 @@ $app->get('/api/lists/{dictId}',
     function (Request $request, Response $response, array $args) {
         $servername = "serwer2001916.home.pl";
         $username = "32213694_vocabulary";
-        $password = "FellDell2000!";
+        $password = "vocpassword123";
         $dbname = "32213694_vocabulary";
         // Create connection
         $conn = new mysqli($servername, $username, $password, $dbname);
@@ -70,7 +70,7 @@ $app->get('/api/words/{listId}',
     function (Request $request, Response $response, array $args) {
         $servername = "serwer2001916.home.pl";
         $username = "32213694_vocabulary";
-        $password = "FellDell2000!";
+        $password = "vocpassword123";
         $dbname = "32213694_vocabulary";
         // Create connection
         $conn = new mysqli($servername, $username, $password, $dbname);
@@ -101,7 +101,7 @@ $app->post('/api/dictionary/add',
 
         $servername = "serwer2001916.home.pl";
         $username = "32213694_vocabulary";
-        $password = "FellDell2000!";
+        $password = "vocpassword123";
         $dbname = "32213694_vocabulary";
 
       $requestData = $request->getParsedBody();
@@ -137,7 +137,7 @@ $app->post('/api/list/add',
 
         $servername = "serwer2001916.home.pl";
         $username = "32213694_vocabulary";
-        $password = "FellDell2000!";
+        $password = "vocpassword123";
         $dbname = "32213694_vocabulary";
 
       $requestData = $request->getParsedBody();
@@ -173,7 +173,7 @@ $app->post('/api/word/add',
 
         $servername = "serwer2001916.home.pl";
         $username = "32213694_vocabulary";
-        $password = "FellDell2000!";
+        $password = "vocpassword123";
         $dbname = "32213694_vocabulary";
 
       $requestData = $request->getParsedBody();
@@ -209,7 +209,7 @@ $app->post('/api/word/delete',
 
         $servername = "serwer2001916.home.pl";
         $username = "32213694_vocabulary";
-        $password = "FellDell2000!";
+        $password = "vocpassword123";
         $dbname = "32213694_vocabulary";
 
       $requestData = $request->getParsedBody();
@@ -243,7 +243,7 @@ $app->post('/api/words/setDifficulty',
 
         $servername = "serwer2001916.home.pl";
         $username = "32213694_vocabulary";
-        $password = "FellDell2000!";
+        $password = "vocpassword123";
         $dbname = "32213694_vocabulary";
 
       $requestData = $request->getParsedBody();
@@ -275,7 +275,7 @@ $app->post('/api/stats/add',
 
     $servername = "serwer2001916.home.pl";
     $username = "32213694_vocabulary";
-    $password = "FellDell2000!";
+    $password = "vocpassword123";
     $dbname = "32213694_vocabulary";
 
     $requestData = $request->getParsedBody();
@@ -322,7 +322,7 @@ $app->get('/api/stats/{listId}',
     function (Request $request, Response $response, array $args) {
         $servername = "serwer2001916.home.pl";
         $username = "32213694_vocabulary";
-        $password = "FellDell2000!";
+        $password = "vocpassword123";
         $dbname = "32213694_vocabulary";
         // Create connection
         $conn = new mysqli($servername, $username, $password, $dbname);
@@ -353,7 +353,7 @@ $app->get('/api/stats/allLists/{dictId}',
     function (Request $request, Response $response, array $args) {
         $servername = "serwer2001916.home.pl";
         $username = "32213694_vocabulary";
-        $password = "FellDell2000!";
+        $password = "vocpassword123";
         $dbname = "32213694_vocabulary";
         // Create connection
         $conn = new mysqli($servername, $username, $password, $dbname);
@@ -394,6 +394,153 @@ $app->get('/api/stats/allLists/{dictId}',
          ];
         $conn->close();
         return $response->withJson($array);
+    }
+);
+
+$app->post('/api/users/add',
+    function (Request $request, Response $response, array $args) {
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "vocpassword123";
+        $dbname = "32213694_vocabulary";
+
+        $requestData = $request->getParsedBody();
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+
+        $encryptedPass = password_hash($requestData['password'], PASSWORD_DEFAULT);
+        $nick = mb_strtolower($requestData['nick'],'UTF-8');
+
+        $sql = "INSERT INTO users (nick, password) VALUES(?, ?)";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('ss', $nick, $encryptedPass); // 's' specifies the variable type => 'string'
+
+
+        if ($stmt->execute() === TRUE) {
+            echo "New user created successfully";
+        } else {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
+
+        $conn->close();
+        return $requestData;
+  }
+
+);
+
+$app->post('/api/validateLogin',
+    function (Request $request, Response $response, array $args) {
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "vocpassword123";
+        $dbname = "32213694_vocabulary";
+
+        $requestData = $request->getParsedBody();
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $nick = $requestData['nick'];
+        $sql = "SELECT nick, password FROM users WHERE nick = \"$nick\"";
+        $result = $conn->query($sql);
+        $array = [];
+
+        $finish = false;
+        if ($result->num_rows > 0) {
+            // output data of each row
+            $row = $result->fetch_assoc();
+            $hash = $row['password'];
+            $finish = password_verify($requestData['password'], $hash);
+
+        } else {
+            echo "0 results";
+        }
+        
+        if($finish){
+
+            $conn->close();
+            $wynik = "true";
+            return $wynik;
+        }
+        else {
+            $conn->close();
+            $wynik = "false";
+            return $wynik;
+        }
+        //return $response->withJson($array);
+    }
+);
+
+$app->get('/api/users/{nick}',
+    function (Request $request, Response $response, array $args) {
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "vocpassword123";
+        $dbname = "32213694_vocabulary";
+
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $nick = $args['nick'];
+        $sql = "SELECT id, nick FROM users WHERE nick = \"$nick\"";
+        $result = $conn->query($sql);
+        $array = [];
+
+        if ($result->num_rows > 0) {
+            // output data of each row
+            while($row = $result->fetch_assoc()) {
+                $array[] = $row;
+            }
+        } else {
+            echo "0 results";
+        }
+        $conn->close();
+        return $response->withJson($array);
+    }
+);
+
+$app->post('/api/validateUniqueNick',
+    function (Request $request, Response $response, array $args) {
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "vocpassword123";
+        $dbname = "32213694_vocabulary";
+
+        $requestData = $request->getParsedBody();
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $nick = $requestData['nick'];
+        $sql = "SELECT nick FROM users";
+        $result = $conn->query($sql);
+        $array = [];
+
+        if ($result->num_rows > 0) {
+            // output data of each row
+            while($row = $result->fetch_assoc()) {
+                if(strtolower($row['nick']) == strtolower($nick)) {
+                  return "false";
+                }
+            }
+
+        }
+        $conn->close();
+
+        return "true";
     }
 );
 

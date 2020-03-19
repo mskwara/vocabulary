@@ -1,72 +1,83 @@
 <template>
-  <div class="page">
-    <div class="panel">
-      <label class="selectLabel">Wybierz słownik</label>
-      <select class="custom-select" v-model="activeDictionary" @change="getLists()" :disabled="testRunning">
-        <option :value="dict" :key="dict.id" v-for="dict in dictionaries">{{getDictTitle(dict)}}</option>
-      </select>
+  <div>
+    <spinner v-if="loading" />
+    <div class="page" v-if="!loading">
+      <div class="panel">
+        <label class="selectLabel">Wybierz słownik</label>
+        <select class="custom-select" v-model="activeDictionary" @change="getLists()" :disabled="testRunning">
+          <option :value="dict" :key="dict.id" v-for="dict in dictionaries">{{getDictTitle(dict)}}</option>
+        </select>
 
-      <label class="selectLabel">Wybierz listę</label>
-      <select class="custom-select" v-model="activeList" :disabled="testRunning">
-        <option :value="list" :key="list.id" v-for="list in lists">{{list.title}}</option>
-      </select>
+        <label class="selectLabel">Wybierz listę</label>
+        <select class="custom-select" v-model="activeList" :disabled="testRunning">
+          <option :value="list" :key="list.id" v-for="list in lists">{{list.title}}</option>
+        </select>
 
-      <p class="header">Język odpowiedzi</p>
-      <div class="radios">
-        <div class="custom-control custom-radio custom-control-inline">
-          <input type="radio" id="radio1" name="answerLang" class="custom-control-input" value="1" v-model="answerLang" :disabled="testRunning">
-          <label class="custom-control-label labellang" for="radio1">{{activeDictionary.lang1}}</label>
-        </div>
-        <div class="custom-control custom-radio custom-control-inline">
-          <input type="radio" id="radio2" name="answerLang" class="custom-control-input" value="2" v-model="answerLang" :disabled="testRunning">
-          <label class="custom-control-label labellang" for="radio2">{{activeDictionary.lang2}}</label>
-        </div>
-      </div>
-      <button type="button" class="btn btn-success" @click="start()" 
-      :disabled="answerLang == null || activeList == null || testRunning">Rozpocznij</button>
-    </div>
-
-
-    <div class="table" v-if="testRunning">
-      <p class="activeWord" v-if="answerLang == 2">{{activeWord.lang1}}</p>
-      <p class="activeWord" v-else>{{activeWord.lang2}}</p>
-
-      <md-field class="answer">
-        <label class="labellang" v-if="answerLang == 1">{{activeDictionary.lang1}}</label>
-        <label class="labellang" v-else>{{activeDictionary.lang2}}</label>
-        <md-input ref="answer" v-model="answer"></md-input>
-      </md-field>
-      <div class="hint">
-        <transition name="fade">
-          <div v-if="hintVisible">
-            <p class="help">{{hintText}}</p>
+        <p class="header">Język odpowiedzi</p>
+        <div class="radios">
+          <div class="custom-control custom-radio custom-control-inline">
+            <input type="radio" id="radio1" name="answerLang" class="custom-control-input" value="1" v-model="answerLang" :disabled="testRunning">
+            <label class="custom-control-label labellang" for="radio1">{{activeDictionary.lang1}}</label>
           </div>
-        </transition>
+          <div class="custom-control custom-radio custom-control-inline">
+            <input type="radio" id="radio2" name="answerLang" class="custom-control-input" value="2" v-model="answerLang" :disabled="testRunning">
+            <label class="custom-control-label labellang" for="radio2">{{activeDictionary.lang2}}</label>
+          </div>
+        </div>
+        <button type="button" class="btn btn-success" @click="start()" 
+        :disabled="answerLang == null || activeList == null || testRunning">Rozpocznij</button>
       </div>
-      <button type="button" class="btn btn-primary accept" @click="accept()">Zatwierdź</button>
+
+
+      <div class="table" v-if="testRunning">
+        <p class="activeWord" v-if="answerLang == 2">{{activeWord.lang1}}</p>
+        <p class="activeWord" v-else>{{activeWord.lang2}}</p>
+
+        <md-field class="answer">
+          <label class="labellang" v-if="answerLang == 1">{{activeDictionary.lang1}}</label>
+          <label class="labellang" v-else>{{activeDictionary.lang2}}</label>
+          <md-input ref="answer" v-model="answer"></md-input>
+        </md-field>
+        <div class="hint">
+          <transition name="fade">
+            <div v-if="hintVisible">
+              <p class="help">{{hintText}}</p>
+            </div>
+          </transition>
+        </div>
+        <button type="button" class="btn btn-primary accept" @click="accept()">Zatwierdź</button>
+      </div>
+
+
+      <md-dialog-alert
+        :md-active.sync="displayResults"
+        md-title="Koniec testu"
+        :md-content="displayResultsText" />
+      
+      <md-dialog-alert
+        :md-active.sync="noWords"
+        md-title="Wystąpił błąd..."
+        md-content="W tej liście nie ma żadnych słówek! Dodaj je w sekcji: Słownictwo" />
     </div>
-
-
-    <md-dialog-alert
-      :md-active.sync="displayResults"
-      md-title="Koniec testu"
-      :md-content="displayResultsText" />
   </div>
 </template>
 
 <script>
+import Spinner from './Spinner.vue';
+import service from './service.js';
 
 export default {
   name: 'Test',
   components: {
+    Spinner
   },
   data(){
     return {
-      activeDictionary: [],
+      activeDictionary: null,
       answer: "",
-      dictionaries: [],
-      lists: [],
-      words: [],
+      dictionaries: null,
+      lists: null,
+      words: null,
       answerLang: null,
       activeWord: {},
       testRunning: false,
@@ -75,7 +86,7 @@ export default {
         all: 0,
         difficultWords: [],
         listId: null,
-        userId: 0,
+        userId: service.id,
       },
       displayResults: false,
       displayResultsText: "",
@@ -83,6 +94,8 @@ export default {
       hintVisible: false,
       hintText: "",
       hintTimeout: null,
+      loading: true,
+      noWords: false
     }
   },
   mounted(){
@@ -95,32 +108,58 @@ export default {
   },
   methods: {
     getDictionaries(){
-      this.$http.get('dictionaries/0').then(response => {
-        this.dictionaries = response.body;
-        this.activeDictionary = this.dictionaries[0];
-        this.$http.get('lists/'+this.activeDictionary.id).then(response => {
-          this.lists = response.body;
-          this.activeList = this.lists[0];
-        });
+      this.$http.get('dictionaries/'+service.id).then(response => {
+        if(response.body != null){
+          this.dictionaries = response.body;
+          this.activeDictionary = this.dictionaries[0];
+          this.$http.get('lists/'+this.activeDictionary.id).then(response => {
+            if(response.body != null){
+              this.lists = response.body;
+              this.activeList = this.lists[0];
+              this.loading = false;
+            }
+            else {
+              this.lists = null;
+              this.activeList = null;
+              this.loading = false;
+            }
+          });
+        }
+        else {
+          this.dictionaries = null;
+          this.activeDictionary = null;
+          this.loading = false;
+        }
       });
     },
     getLists(){
       this.$http.get('lists/'+this.activeDictionary.id).then(response => {
           this.lists = response.body;
-          this.activeList = this.lists[0];
+          if(this.lists != null) {
+            this.activeList = this.lists[0];
+          }
+          else {
+            this.activeList = null;
+          }
         });
     },
     getWordsAndRun(){
       this.$http.get('words/'+this.activeList.id).then(response => {
-        this.words = response.body;
-        this.shuffleArray(this.words);
-        this.testRunning = true;
-        this.result.correct = 0;
-        this.result.all = this.words.length;
-        this.result.difficultWords = [];
-        this.result.listId = this.activeList.id;
-        this.remaining = this.words.length;
-        this.displayNextWord();
+        if(response.body != null){
+          this.words = response.body;
+          this.shuffleArray(this.words);
+          this.testRunning = true;
+          this.result.correct = 0;
+          this.result.all = this.words.length;
+          this.result.difficultWords = [];
+          this.result.listId = this.activeList.id;
+          this.remaining = this.words.length;
+          this.displayNextWord();
+        }
+        else {
+          this.words = null;
+          this.noWords = true;
+        }
       });
     },
     getDictTitle(dict){
