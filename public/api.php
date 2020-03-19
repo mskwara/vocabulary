@@ -414,7 +414,7 @@ $app->post('/api/users/add',
 
 
         $encryptedPass = password_hash($requestData['password'], PASSWORD_DEFAULT);
-        $nick = mb_strtolower($requestData['nick'],'UTF-8');
+        $nick = strtolower($requestData['nick']);
 
         $sql = "INSERT INTO users (nick, password) VALUES(?, ?)";
 

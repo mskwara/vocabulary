@@ -73,6 +73,13 @@ export default {
       success: false,
     }
   },
+  mounted(){
+    window.addEventListener("keypress", e => {
+      if(this.loginData.nick != "" && this.loginData.password != "" && e.keyCode == 13){
+        this.login();
+      }
+    });
+  },
   methods: {
     register(){
       if(this.registerData.nick != "" && this.registerData.password != "" && this.registerData.nick.length >= 4 && this.registerData.password.length >= 5){
