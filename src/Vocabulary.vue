@@ -120,16 +120,18 @@ export default {
   },
   methods: {
     addDictionary(){
-      this.$http.post('dictionary/add', this.newDict);
+      this.$http.post('dictionary/add', this.newDict).then(()=>{
+        this.getDictionaries();
+      });
       this.newDict.lang1 = "";
       this.newDict.lang2 = "";
-      this.getDictionaries();
     },
     addList(){
       this.newList.dictId = this.activeDictionary.id;
-      this.$http.post('list/add', this.newList);
+      this.$http.post('list/add', this.newList).then(()=>{
+        this.getDictionaries();
+      });
       this.newList.title = "";
-      this.getDictionaries();
     },
     getDictionaries(){
       this.$http.get('dictionaries/'+service.id).then(response => {
@@ -190,15 +192,17 @@ export default {
     addWord(){
       this.loadingNewWord = true;
       this.newWord.listId = this.activeList.id;
-      this.$http.post('word/add', this.newWord);
+      this.$http.post('word/add', this.newWord).then(()=>{
+        this.getWords();
+      });
       this.newWord.lang1 = "";
       this.newWord.lang2 = "";
       this.$nextTick(() => this.$refs.lang1.$el.focus())
-      this.getWords();
     },
     deleteWord(word){
-      this.$http.post('word/delete', word);
-      this.getWords();
+      this.$http.post('word/delete', word).then(()=>{
+        this.getWords();
+      });
     },
     styleDifficulty(word){
       var style = "";

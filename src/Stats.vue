@@ -1,9 +1,6 @@
 <template>
   <div>
     <spinner v-if="loading1 || loading2" />
-    {{valuesAll}}
-    {{namesAll}}
-    {{labelsAll}}
     <div class="page" v-if="!loading1 && !loading2">
       <div class="panel">
         <label class="selectLabel">Wybierz słownik</label>
