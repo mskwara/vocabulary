@@ -12,7 +12,7 @@
         </select>
 
 
-        <label class="selectLabel">Wybierz listę</label>
+        <label class="selectLabel">Wybierz listę jesli jestes bawolem</label> //TODO
         <select class="custom-select" v-model="activeList" @change="getStats()" v-if="lists != null">
           <option :value="list" :key="list.id" v-for="list in lists">{{list.title}}</option>
         </select>
@@ -232,6 +232,7 @@ export default {
   flex-direction: row;
   justify-content: space-around;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 .panel {
   width: 30%;

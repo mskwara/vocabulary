@@ -12,6 +12,7 @@
         <md-input v-model="loginData.password" type="password"></md-input>
       </md-field>
       <button type="button" class="btn btn-primary login" @click="login()">Zaloguj się</button>
+      <spinner class="spinner" v-if="logging" />
     </div>
     
     <div class="registerpanel">
@@ -50,13 +51,13 @@
 </template>
 
 <script>
-// import Spinner from './Spinner.vue';
+import Spinner from './Spinner.vue';
 import service from './service.js';
 
 export default {
   name: 'LoginRegister',
   components: {
-    // Spinner
+     Spinner
   },
   data(){
     return {
@@ -71,6 +72,7 @@ export default {
       failed: false,
       notUniqueNick: false,
       success: false,
+      logging: false,
     }
   },
   mounted(){
@@ -104,6 +106,7 @@ export default {
     },
     login(){
       if(this.loginData.nick != "" && this.loginData.password != "") {
+        this.logging = true;
         this.$http.post('validateLogin', this.loginData).then(response => {
           if(response.body == "true"){
               this.$emit("authenticated", true);
@@ -115,9 +118,11 @@ export default {
                 this.$router.replace({ name: "home" }).catch(() => {});
                 this.loginData.nick = "";
                 this.loginData.password = "";
+                this.logging = false;
               });
           } else {
               this.failed = true;
+              this.logging = false;
           }
         }).catch(error => {
           alert(error);
@@ -154,5 +159,8 @@ export default {
 }
 button {
   margin-top: 10px;
+}
+.spinner {
+  margin-top: 20px;
 }
 </style>

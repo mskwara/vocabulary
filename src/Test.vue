@@ -259,6 +259,7 @@ export default {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
+  flex-wrap: wrap;
 }
 .panel {
   width: 30%;

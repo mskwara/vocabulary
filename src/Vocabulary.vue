@@ -231,6 +231,7 @@ export default {
   flex-direction: row;
   justify-content: center;
   align-items: baseline;
+  flex-wrap: wrap;
 }
 .panel {
   width: 30%;
