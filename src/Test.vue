@@ -224,7 +224,7 @@ export default {
       return false;
     },
     accept(){
-        if((this.answerLang == 1 && this.answer.trim() == this.activeWord.lang1.trim()) || (this.answerLang == 2 && this.answer.trim() == this.activeWord.lang2.trim())){
+        if((this.answerLang == 1 && this.answer.toLowerCase().trim() == this.activeWord.lang1.toLowerCase().trim()) || (this.answerLang == 2 && this.answer.toLowerCase().trim() == this.activeWord.lang2.toLowerCase().trim())){
           if(!this.wasIncorrect(this.activeWord)){
             this.result.correct++;
           }

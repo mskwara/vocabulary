@@ -113,6 +113,8 @@ export default {
                 service.nick = this.loginData.nick;
                 service.id = response.body[0].id;
                 this.$router.replace({ name: "home" }).catch(() => {});
+                this.loginData.nick = "";
+                this.loginData.password = "";
               });
           } else {
               this.failed = true;

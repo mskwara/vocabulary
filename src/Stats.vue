@@ -1,6 +1,9 @@
 <template>
   <div>
     <spinner v-if="loading1 || loading2" />
+    {{valuesAll}}
+    {{namesAll}}
+    {{labelsAll}}
     <div class="page" v-if="!loading1 && !loading2">
       <div class="panel">
         <label class="selectLabel">Wybierz słownik</label>
@@ -20,7 +23,7 @@
           <option disabled selected>Brak dostępnych list</option>
         </select>
 
-        <div v-if="displayDictStats == true">
+        <div v-if="labelsAll != null && namesAll != null && valuesAll != null">
           <graph-line
                   :width="500"
                   :height="300"
@@ -31,7 +34,7 @@
                   :labels="labelsAll"
                   :names="namesAll"
                   :values="valuesAll">
-              <note :text="'Wyniki procentowe w kolejnych testach'"></note>
+              <note text="Wyniki procentowe w kolejnych testach"></note>
               <tooltip :names="namesAll" :position="'right'"></tooltip>
               <legends :names="namesAll"></legends>
               <guideline :tooltip-y="true"></guideline>
@@ -42,7 +45,7 @@
         </div>
       </div>
 
-      <div class="table" v-if="displayListStats == true">
+      <div class="table" v-if="labels != null && names != null && values != null">
         <graph-line
                 :width="700"
                 :height="500"
@@ -54,7 +57,7 @@
                 :labels="labels"
                 :names="names"
                 :values="values">
-            <note :text="'Wyniki procentowe w kolejnych testach'"></note>
+            <note text="Wyniki procentowe w kolejnych testach"></note>
             <tooltip :names="names" :position="'right'"></tooltip>
             <legends :names="names"></legends>
             <guideline :tooltip-y="true"></guideline>
@@ -90,8 +93,6 @@ export default {
       labelsAll: null,
       loading1: true,
       loading2: true,
-      displayDictStats: true,
-      displayListStats: true,
 
     }
   },
@@ -161,7 +162,6 @@ export default {
             this.loading1 = false;
           }
           else {
-            this.displayListStats = false;
             this.values = null;
             this.names = null;
             this.labels = null;
@@ -170,12 +170,16 @@ export default {
         });
       }
       else {
-        this.displayListStats = false;
         this.values = null;
         this.names = null;
         this.labels = null;
         this.loading1 = false;
       }
+    },
+    fixChartProblem(inx){
+      var maxValues = this.valuesAll[inx];
+      this.valuesAll.splice(inx, 1);
+      this.valuesAll.unshift(maxValues);
     },
     getDictStats(){
       if(this.activeDictionary != null){
@@ -186,18 +190,20 @@ export default {
             this.labelsAll = [];
 
             var maxLen = 0;
+            var inx = 0;
             for(var i = 0 ; i < this.valuesAll.length ; i++){
               if(this.valuesAll[i].length > maxLen){
                 maxLen = this.valuesAll[i].length;
+                inx = i;
               }
             }
+            this.fixChartProblem(inx);
             for(var k = 1 ; k <= maxLen ; k++){
               this.labelsAll.push(k);
             }
             this.loading2 = false;
           }
           else {
-            this.displayDictStats = false;
             this.valuesAll = null;
             this.namesAll = null;
             this.labelsAll = null;
@@ -206,7 +212,6 @@ export default {
         });
       }
       else {
-        this.displayDictStats = false;
         this.valuesAll = null;
         this.namesAll = null;
         this.labelsAll = null;
