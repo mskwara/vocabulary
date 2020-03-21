@@ -160,7 +160,4 @@ export default {
 button {
   margin-top: 10px;
 }
-.spinner {
-  margin-top: 20px;
-}
 </style>

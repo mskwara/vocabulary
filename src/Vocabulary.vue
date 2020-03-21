@@ -1,78 +1,101 @@
 <template>
   <div>
     <spinner v-if="loading" />
-    <div class="page" v-if="!loading">
-      <div class="panel">
-        <label class="selectLabel">Wybierz słownik</label>
-        <select class="custom-select" v-model="activeDictionary" @change="getLists()" v-if="dictionaries != null">
-          <option :value="dict" :key="dict.id" v-for="dict in dictionaries">{{getDictTitle(dict)}}</option>
-        </select>
-        <select class="custom-select" v-else>
-          <option disabled selected>Brak dostępnych słowników</option>
-        </select>
+    <transition name="fade">
+      <div class="page" v-if="!loading">
+        <div class="panel">
+          <label class="selectLabel">Wybierz słownik</label>
+          <div class="dualWithDelete">
+            <select class="custom-select" v-model="activeDictionary" @change="getLists()" v-if="dictionaries != null">
+              <option :value="dict" :key="dict.id" v-for="dict in dictionaries">{{getDictTitle(dict)}}</option>
+            </select>
+            <select class="custom-select" v-else>
+              <option disabled selected>Brak dostępnych słowników</option>
+            </select>
+            <transition name="fade">
+              <img class="deleteSelect" src="./assets/stop.png" @click="deleteDictionary()" v-if="activeDictionary != null" />
+            </transition>
+          </div>
 
-        <label class="selectLabel" v-if="activeDictionary != null">Wybierz listę</label>
-        <select class="custom-select" v-model="activeList" @change="getWords()" v-if="lists != null && activeDictionary != null">
-          <option :value="list" :key="list.id" v-for="list in lists">{{list.title}}</option>
-        </select>
-        <select class="custom-select" v-if="lists == null && activeDictionary != null">
-          <option disabled selected>Brak dostępnych list</option>
-        </select>
+          <label class="selectLabel" v-if="activeDictionary != null">Wybierz listę</label>
+          <div class="dualWithDelete">
+            <select class="custom-select" v-model="activeList" @change="getWords()" v-if="lists != null && activeDictionary != null">
+              <option :value="list" :key="list.id" v-for="list in lists">{{list.title}}</option>
+            </select>
+            <select class="custom-select" v-if="lists == null && activeDictionary != null">
+              <option disabled selected>Brak dostępnych list</option>
+            </select>
+            <transition name="fade">
+              <img class="deleteSelect" src="./assets/stop.png" @click="deleteList()" v-if="activeList != null" />
+            </transition>
+          </div>
 
-        <p class="header newdict">Nowy słownik</p>
-        <span class="dual">
-          <md-field class="leftinput">
-            <label>Pierwszy język</label>
-            <md-input v-model="newDict.lang1"></md-input>
-          </md-field>
-          <md-field>
-            <label>Drugi język</label>
-            <md-input v-model="newDict.lang2"></md-input>
-          </md-field>
-        </span>
-        <button type="button" class="btn btn-warning" @click="addDictionary()" :disabled="newDict.lang1 == '' || newDict.lang2 == ''">Dodaj słownik</button>
-        
-        <p class="header newdict" v-if="activeDictionary != null">Nowa lista w słowniku</p>
-        <md-field class="listinput" v-if="activeDictionary != null">
-          <label>Nazwa listy</label>
-          <md-input v-model="newList.title"></md-input>
-        </md-field>
-        <button v-if="activeDictionary != null" type="button" class="btn btn-info" @click="addList()" :disabled="activeDictionary == null || newList.title == ''">Dodaj listę</button>
+          <p class="header newdict">Nowy słownik</p>
+          <span class="dual">
+            <md-field class="leftinput">
+              <label>Pierwszy język</label>
+              <md-input v-model="newDict.lang1"></md-input>
+            </md-field>
+            <md-field>
+              <label>Drugi język</label>
+              <md-input v-model="newDict.lang2"></md-input>
+            </md-field>
+          </span>
+          <button type="button" class="btn btn-warning" @click="addDictionary()" :disabled="newDict.lang1 == '' || newDict.lang2 == ''">Dodaj słownik</button>
+          <transition name="fade">
+            <spinner v-if="loadingAddedDict" />
+          </transition>
+          <transition name="fade">
+            <div class="wpisywarka" v-if="activeDictionary != null">
+              <p class="header newdict">Nowa lista w słowniku</p>
+              <md-field class="listinput">
+                <label>Nazwa listy</label>
+                <md-input v-model="newList.title"></md-input>
+              </md-field>
+              <button type="button" class="btn btn-info" @click="addList()" :disabled="activeDictionary == null || newList.title == ''">Dodaj listę</button>
+            </div>
+          </transition>
+          <transition name="fade">
+            <spinner v-if="loadingAddedList" />
+          </transition>
+        </div>
+
+        <transition name="fade">
+          <div class="table" v-if="activeList != null">
+            <p class="header">Dodaj słówko</p>
+            <span class="dual">
+              <md-field class="leftinput wordinput">
+                <label class="labellang">{{activeDictionary.lang1}}</label>
+                <md-input ref="lang1" v-model="newWord.lang1"></md-input>
+              </md-field>
+              <md-field class="wordinput">
+                <label class="labellang">{{activeDictionary.lang2}}</label>
+                <md-input v-model="newWord.lang2"></md-input>
+              </md-field>
+            </span>
+            <button type="button" class="btn btn-primary" @click="addWord()" :disabled="newWord.lang1 == '' || newWord.lang2 == ''">Wstaw słówko</button>
+            
+            <div class="spinner-grow text-primary loadingnewword" role="status" v-if="loadingNewWord">
+              <span class="sr-only">Loading...</span>
+            </div>
+            <div class="words" v-if="words != null && words.length > 0">
+              <ul class="list-group">
+                <li class="list-group-item word" :key="word.id" v-for="word in words">
+                  <div class="wordAndDiff">
+                    <p class="wordContent">{{getWordTitle(word)}}</p>
+                    <div class="difficultyDot" v-if="word.testsCount != 0" :style="styleDifficulty(word)"></div>
+                  </div>
+                  <img class="delete" src="./assets/cancel.svg" @click="deleteWord(word)" />
+                </li>
+              </ul>
+            </div>
+            <div class="words" v-else>
+              Brak słówek w tej liście!
+            </div>
+          </div>
+        </transition>
       </div>
-
-      <div class="table" v-if="activeList != null">
-        <p class="header">Dodaj słówko</p>
-        <span class="dual">
-          <md-field class="leftinput wordinput">
-            <label class="labellang">{{activeDictionary.lang1}}</label>
-            <md-input ref="lang1" v-model="newWord.lang1"></md-input>
-          </md-field>
-          <md-field class="wordinput">
-            <label class="labellang">{{activeDictionary.lang2}}</label>
-            <md-input v-model="newWord.lang2"></md-input>
-          </md-field>
-        </span>
-        <button type="button" class="btn btn-primary" @click="addWord()" :disabled="newWord.lang1 == '' || newWord.lang2 == ''">Wstaw słówko</button>
-        
-        <div class="spinner-grow text-primary loadingnewword" role="status" v-if="loadingNewWord">
-          <span class="sr-only">Loading...</span>
-        </div>
-        <div class="words" v-if="words != null && words.length > 0">
-          <ul class="list-group">
-            <li class="list-group-item word" :key="word.id" v-for="word in words">
-              <div class="wordAndDiff">
-                <p class="wordContent">{{getWordTitle(word)}}</p>
-                <div class="difficultyDot" v-if="word.testsCount != 0" :style="styleDifficulty(word)"></div>
-              </div>
-              <img class="delete" src="./assets/cancel.svg" @click="deleteWord(word)" />
-            </li>
-          </ul>
-        </div>
-        <div class="words" v-else>
-          Brak słówek w tej liście!
-        </div>
-      </div>
-    </div>
+    </transition>
   </div>
 </template>
 
@@ -108,6 +131,8 @@ export default {
       words: null,
       loading: true,
       loadingNewWord: false,
+      loadingAddedDict: false,
+      loadingAddedList: false,
     }
   },
   mounted(){
@@ -120,6 +145,7 @@ export default {
   },
   methods: {
     addDictionary(){
+      this.loadingAddedDict = true;
       this.$http.post('dictionary/add', this.newDict).then(()=>{
         this.getDictionaries();
       });
@@ -127,6 +153,7 @@ export default {
       this.newDict.lang2 = "";
     },
     addList(){
+      this.loadingAddedList = true;
       this.newList.dictId = this.activeDictionary.id;
       this.$http.post('list/add', this.newList).then(()=>{
         this.getDictionaries();
@@ -138,15 +165,18 @@ export default {
         if(response.body != null){
           this.dictionaries = response.body;
           this.activeDictionary = this.dictionaries[0];
+          this.loadingAddedDict = false;
           this.$http.get('lists/'+this.activeDictionary.id).then(response => {
             if(response.body != null){
               this.lists = response.body;
               this.activeList = this.lists[0];
+              this.loadingAddedList = false;
               this.getWords();
             }
             else {
               this.lists = null;
               this.activeList = null;
+              this.loadingAddedList = false;
               this.loading = false;
             }
           });
@@ -154,7 +184,9 @@ export default {
         else {
           this.dictionaries = null;
           this.activeDictionary = null;
+          this.activeList = null;
           this.loading = false;
+          this.loadingFirstDictionary = false;
         }
       });
     },
@@ -220,7 +252,21 @@ export default {
         style = "background-color: #fc0303"
       }
       return style;
-    }
+    },
+    deleteDictionary(){
+      if(this.activeDictionary != null){
+        this.$http.post('dictionary/delete', this.activeDictionary).then(()=>{
+          this.getDictionaries();
+        });
+      }
+    },
+    deleteList(){
+      if(this.activeList != null){
+        this.$http.post('list/delete', this.activeList).then(()=>{
+          this.getLists();
+        });
+      }
+    },
   }
 }
 </script>
@@ -257,6 +303,14 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  width: 90%;
+}
+.dualWithDelete {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: flex-start;
+  width: 90%;
 }
 button {
   width: 90% !important;
@@ -294,6 +348,14 @@ button {
 .delete:hover {
   transform: rotate(90deg);
 }
+.deleteSelect {
+  width: 15px;
+  transition: 0.3s;
+  margin-left: 10px;
+}
+.deleteSelect:hover {
+  transform: rotate(90deg);
+}
 .difficultyDot {
   width: 7px;
   height: 7px;
@@ -320,5 +382,18 @@ button {
 }
 .loadingnewword {
   margin-top: 10px;
+}
+.wpisywarka {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 1s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
 }
 </style>

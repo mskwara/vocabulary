@@ -1,69 +1,70 @@
 <template>
   <div>
     <spinner v-if="loading1 || loading2" />
-    <div class="page" v-if="!loading1 && !loading2">
-      <div class="panel">
-        <label class="selectLabel">Wybierz słownik</label>
-        <select class="custom-select" v-model="activeDictionary" @change="dictChange()" v-if="dictionaries != null">
-          <option :value="dict" :key="dict.id" v-for="dict in dictionaries">{{getDictTitle(dict)}}</option>
-        </select>
-        <select class="custom-select" v-else>
-          <option disabled selected>Brak dostępnych słowników</option>
-        </select>
+    <transition name="fade">
+      <div class="page" v-if="!loading1 && !loading2">
+        <div class="panel">
+          <label class="selectLabel">Wybierz słownik</label>
+          <select class="custom-select" v-model="activeDictionary" @change="dictChange()" v-if="dictionaries != null">
+            <option :value="dict" :key="dict.id" v-for="dict in dictionaries">{{getDictTitle(dict)}}</option>
+          </select>
+          <select class="custom-select" v-else>
+            <option disabled selected>Brak dostępnych słowników</option>
+          </select>
 
 
-        <label class="selectLabel">Wybierz listę jesli jestes bawolem</label> //TODO
-        <select class="custom-select" v-model="activeList" @change="getStats()" v-if="lists != null">
-          <option :value="list" :key="list.id" v-for="list in lists">{{list.title}}</option>
-        </select>
-        <select class="custom-select" v-else>
-          <option disabled selected>Brak dostępnych list</option>
-        </select>
+          <label class="selectLabel">Wybierz listę</label>
+          <select class="custom-select" v-model="activeList" @change="getStats()" v-if="lists != null">
+            <option :value="list" :key="list.id" v-for="list in lists">{{list.title}}</option>
+          </select>
+          <select class="custom-select" v-else>
+            <option disabled selected>Brak dostępnych list</option>
+          </select>
+          <div v-if="labelsAll != null && namesAll != null && valuesAll != null">
+            <graph-line
+                    :width="500"
+                    :height="300"
+                    :shape="'normal'"
+                    :axis-min="0"
+                    :axis-max="100"
+                    :axis-full-mode="true"
+                    :labels="labelsAll"
+                    :names="namesAll"
+                    :values="valuesAll">
+                <note text="Wyniki procentowe w kolejnych testach"></note>
+                <tooltip :names="namesAll" :position="'right'"></tooltip>
+                <legends :names="namesAll"></legends>
+                <guideline :tooltip-y="true"></guideline>
+            </graph-line>
+          </div>
+          <div v-else>
+            Brak statystyk do pokazania dla tego słownika!
+          </div>
+        </div>
 
-        <div v-if="labelsAll != null && namesAll != null && valuesAll != null">
+        <div class="table" v-if="labels != null && names != null && values != null">
           <graph-line
-                  :width="500"
-                  :height="300"
+                  :width="700"
+                  :height="500"
                   :shape="'normal'"
                   :axis-min="0"
                   :axis-max="100"
                   :axis-full-mode="true"
-                  :labels="labelsAll"
-                  :names="namesAll"
-                  :values="valuesAll">
+                  :colors="['#00b81c']"
+                  :labels="labels"
+                  :names="names"
+                  :values="values">
               <note text="Wyniki procentowe w kolejnych testach"></note>
-              <tooltip :names="namesAll" :position="'right'"></tooltip>
-              <legends :names="namesAll"></legends>
+              <tooltip :names="names" :position="'right'"></tooltip>
+              <legends :names="names"></legends>
               <guideline :tooltip-y="true"></guideline>
           </graph-line>
         </div>
         <div v-else>
-          Brak statystyk do pokazania dla tego słownika!
+          Brak statystyk do pokazania dla tej listy!
         </div>
       </div>
-
-      <div class="table" v-if="labels != null && names != null && values != null">
-        <graph-line
-                :width="700"
-                :height="500"
-                :shape="'normal'"
-                :axis-min="0"
-                :axis-max="100"
-                :axis-full-mode="true"
-                :colors="['#00b81c']"
-                :labels="labels"
-                :names="names"
-                :values="values">
-            <note text="Wyniki procentowe w kolejnych testach"></note>
-            <tooltip :names="names" :position="'right'"></tooltip>
-            <legends :names="names"></legends>
-            <guideline :tooltip-y="true"></guideline>
-        </graph-line>
-      </div>
-      <div v-else>
-        Brak statystyk do pokazania dla tej listy!
-      </div>
-    </div>
+    </transition>
   </div>
 </template>
 
@@ -262,5 +263,12 @@ export default {
 .selectLabel {
   align-self: flex-start;
   margin-left: 20px;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 1s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
 }
 </style>

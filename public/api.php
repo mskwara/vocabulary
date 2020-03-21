@@ -544,4 +544,123 @@ $app->post('/api/validateUniqueNick',
     }
 );
 
+$app->post('/api/dictionary/delete',
+    function (Request $request, Response $response, array $args) {
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "vocpassword123";
+        $dbname = "32213694_vocabulary";
+
+        $requestData = $request->getParsedBody();
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $dictId = $requestData['id'];
+        $sql = "DELETE FROM dictionaries WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('i', $dictId);
+
+
+        if ($stmt->execute() === TRUE) {
+            echo "Record deleted successfully";
+        } else {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
+
+        $sql1 = "SELECT id FROM lists WHERE dictId = $dictId";
+        $result = $conn->query($sql1);
+        $listsIds = [];
+        if ($result->num_rows > 0) {
+            // output data of each row
+            while($row = $result->fetch_assoc()) {
+                $listsIds[] = $row['id'];
+            }
+        }
+
+        $sql2 = "DELETE FROM lists WHERE dictId = ?";
+        $stmt = $conn->prepare($sql2);
+        $stmt->bind_param('i', $dictId);
+
+
+        if ($stmt->execute() === TRUE) {
+            echo "Record deleted successfully";
+        } else {
+            echo "Error: " . $sql2 . "<br>" . $conn->error;
+        }
+
+        $sql3 = 'DELETE FROM stats WHERE listId IN (' . implode(',', array_map('intval', $listsIds)) . ')';
+        if ($conn->query($sql3) === TRUE) { 
+            echo "Stats deleted successfully";
+        } else {
+            echo "Error: " . $sql3 . "<br>" . $conn->error;
+        }
+
+        $sql4 = 'DELETE FROM words WHERE listId IN (' . implode(',', array_map('intval', $listsIds)) . ')';
+        if ($conn->query($sql4) === TRUE) {  
+            echo "Words deleted successfully";
+        } else {
+            echo "Error: " . $sql4 . "<br>" . $conn->error;
+        }
+
+        $conn->close();
+    }
+);
+
+$app->post('/api/list/delete',
+    function (Request $request, Response $response, array $args) {
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "vocpassword123";
+        $dbname = "32213694_vocabulary";
+
+        $requestData = $request->getParsedBody();
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $listId = $requestData['id'];
+
+        $sql2 = "DELETE FROM lists WHERE id = ?";
+        $stmt = $conn->prepare($sql2);
+        $stmt->bind_param('i', $listId);
+
+
+        if ($stmt->execute() === TRUE) {
+            echo "Record deleted successfully";
+        } else {
+            echo "Error: " . $sql2 . "<br>" . $conn->error;
+        }
+
+        $sql3 = "DELETE FROM stats WHERE listId = ?";
+        $stmt = $conn->prepare($sql3);
+        $stmt->bind_param('i', $listId);
+
+
+        if ($stmt->execute() === TRUE) {
+            echo "Record deleted successfully";
+        } else {
+            echo "Error: " . $sql3 . "<br>" . $conn->error;
+        }
+
+        $sql4 = "DELETE FROM words WHERE listId = ?";
+        $stmt = $conn->prepare($sql4);
+        $stmt->bind_param('i', $listId);
+
+
+        if ($stmt->execute() === TRUE) {
+            echo "Record deleted successfully";
+        } else {
+            echo "Error: " . $sql4 . "<br>" . $conn->error;
+        }
+
+        $conn->close();
+    }
+);
+
+
 $app->run();

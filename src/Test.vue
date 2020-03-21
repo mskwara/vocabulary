@@ -1,6 +1,7 @@
 <template>
   <div>
     <spinner v-if="loading" />
+    <transition name="fade">
     <div class="page" v-if="!loading">
       <div class="panel">
         <label class="selectLabel">Wybierz słownik</label>
@@ -28,25 +29,26 @@
         :disabled="answerLang == null || activeList == null || testRunning">Rozpocznij</button>
       </div>
 
+      <transition name="fade">
+        <div class="table" v-if="testRunning">
+          <p class="activeWord" v-if="answerLang == 2">{{activeWord.lang1}}</p>
+          <p class="activeWord" v-else>{{activeWord.lang2}}</p>
 
-      <div class="table" v-if="testRunning">
-        <p class="activeWord" v-if="answerLang == 2">{{activeWord.lang1}}</p>
-        <p class="activeWord" v-else>{{activeWord.lang2}}</p>
-
-        <md-field class="answer">
-          <label class="labellang" v-if="answerLang == 1">{{activeDictionary.lang1}}</label>
-          <label class="labellang" v-else>{{activeDictionary.lang2}}</label>
-          <md-input ref="answer" v-model="answer"></md-input>
-        </md-field>
-        <div class="hint">
-          <transition name="fade">
-            <div v-if="hintVisible">
-              <p class="help">{{hintText}}</p>
-            </div>
-          </transition>
+          <md-field class="answer">
+            <label class="labellang" v-if="answerLang == 1">{{activeDictionary.lang1}}</label>
+            <label class="labellang" v-else>{{activeDictionary.lang2}}</label>
+            <md-input ref="answer" v-model="answer"></md-input>
+          </md-field>
+          <div class="hint">
+            <transition name="fade">
+              <div v-if="hintVisible">
+                <p class="help">{{hintText}}</p>
+              </div>
+            </transition>
+          </div>
+          <button type="button" class="btn btn-primary accept" @click="accept()">Zatwierdź</button>
         </div>
-        <button type="button" class="btn btn-primary accept" @click="accept()">Zatwierdź</button>
-      </div>
+      </transition>
 
 
       <md-dialog-alert
@@ -59,6 +61,7 @@
         md-title="Wystąpił błąd..."
         md-content="W tej liście nie ma żadnych słówek! Dodaj je w sekcji: Słownictwo" />
     </div>
+    </transition>
   </div>
 </template>
 
