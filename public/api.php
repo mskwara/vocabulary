@@ -176,15 +176,14 @@ $app->post('/api/word/add',
         $password = "vocpassword123";
         $dbname = "32213694_vocabulary";
 
-      $requestData = $request->getParsedBody();
-      // Create connection
-      $conn = new mysqli($servername, $username, $password, $dbname);
-      // Check connection
-      if ($conn->connect_error) {
-          die("Connection failed: " . $conn->connect_error);
-      }
-
-      $sql = "INSERT INTO words (listId, lang1, lang2)
+        $requestData = $request->getParsedBody();
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $sql = "INSERT INTO words (listId, lang1, lang2)
        VALUES('$requestData[listId]', ?, ?)";
 
 
@@ -199,9 +198,39 @@ $app->post('/api/word/add',
       }
 
       $conn->close();
-      return $requestData;
-  }
+    }
+);
 
+$app->post('/api/word/update',
+     function (Request $request, Response $response, array $args) {
+
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "vocpassword123";
+        $dbname = "32213694_vocabulary";
+
+        $requestData = $request->getParsedBody();
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $sql = "UPDATE words SET lang1 = ?, lang2 = ? WHERE id = ?";
+
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('ssi', $requestData['lang1'], $requestData['lang2'], $requestData['id']); // 's' specifies the variable type => 'string'
+
+
+      if ($stmt->execute() === TRUE) {
+          echo "Record updated successfully";
+      } else {
+          echo "Error: " . $sql . "<br>" . $conn->error;
+      }
+
+      $conn->close();
+    }
 );
 
 $app->post('/api/word/delete',

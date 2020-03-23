@@ -25,7 +25,16 @@
             <label class="custom-control-label labellang" for="radio2">{{activeDictionary.lang2}}</label>
           </div>
         </div>
-        <button type="button" class="btn btn-success" @click="start()" 
+        <div class="sliderPanel">
+          <div class="slider">
+            <label for="timeRange">Czas na odpowiedź</label>
+            <input type="range" class="custom-range" min="0" max="30" step="5" id="timeRange" v-model="timeForAnswer" :disabled="testRunning">
+          </div>
+          <h3 v-if="timeForAnswer == 0">∞</h3>
+          <h3 v-else>{{timeForAnswer}}s</h3>
+        </div>
+
+        <button type="button" class="btn btn-success" @click="getWordsAndRun()" 
         :disabled="answerLang == null || activeList == null || testRunning">Rozpocznij</button>
       </div>
 
@@ -39,6 +48,9 @@
             <label class="labellang" v-else>{{activeDictionary.lang2}}</label>
             <md-input ref="answer" v-model="answer"></md-input>
           </md-field>
+          <div class="progress time" v-if="timeForAnswer != 0">
+            <div class="progress-bar bg-info" role="progressbar" :style="setTime()" aria-valuemin="0" :aria-valuemax="timeForAnswer"></div>
+          </div>
           <div class="hint">
             <transition name="fade">
               <div v-if="hintVisible">
@@ -98,7 +110,11 @@ export default {
       hintText: "",
       hintTimeout: null,
       loading: true,
-      noWords: false
+      noWords: false,
+      timeForAnswer: 0,
+      remainingTime: 0,
+      answerInterval: null,
+      wasLate: false,
     }
   },
   mounted(){
@@ -188,14 +204,13 @@ export default {
       array[0] = array[index];
       array[index] = temp;
     },
-    start(){
-      this.getWordsAndRun();
-    },
     displayNextWord(){
       if(this.remaining == 0){
+        clearTimeout(this.answerInterval);
         var numeral = require('numeral');
         var percent = numeral(this.result.correct*1.0/this.result.all*100).format('0.00');
-        this.displayResultsText = "Twój wynik to "+this.result.correct+"/"+this.result.all+", co stanowi "+percent+"%";
+        this.result.correct = numeral(this.result.correct).format('0.0');
+        this.displayResultsText = "Twój wynik to "+this.result.correct+"/"+this.result.all+".0, co stanowi "+percent+"%";
         this.displayResults = true;
         this.testRunning = false;
         this.$http.post('stats/add', this.result);
@@ -203,6 +218,24 @@ export default {
         return;
       }
       this.activeWord = this.words[0];
+      if(this.timeForAnswer != 0){  //jeśli jest ustawiony czas
+        if(!this.wasLate){
+          this.remainingTime = parseInt(this.timeForAnswer);
+        }
+        else {
+          this.remainingTime = parseInt(this.timeForAnswer)+1;
+        }
+        this.wasLate = false;
+        clearTimeout(this.answerInterval);
+        this.answerInterval = setInterval(() => {
+          if(this.remainingTime == 0){
+            this.wasLate = true;
+            this.accept();
+          }
+          this.remainingTime--;
+        }, 1000);
+      }
+      
       this.$nextTick(() => this.$refs.answer.$el.focus());
       
     },
@@ -227,31 +260,64 @@ export default {
       return false;
     },
     accept(){
-        if((this.answerLang == 1 && this.answer.toLowerCase().trim() == this.activeWord.lang1.toLowerCase().trim()) || (this.answerLang == 2 && this.answer.toLowerCase().trim() == this.activeWord.lang2.toLowerCase().trim())){
-          if(!this.wasIncorrect(this.activeWord)){
-            this.result.correct++;
-          }
-          this.remaining--;
-          this.words.splice(0, 1);
-          this.displayNextWord();
+      
+      const inputList = this.answer.split(",");
+      inputList.forEach((word, index) => {
+        inputList[index] = word.toLowerCase().trim();
+      }); //mamy inputList czyli słowa które wpisał user
+
+      let answerList = [];
+      if(this.answerLang == 1){
+        answerList = this.activeWord.lang1.toLowerCase().split(", ");
+      }
+      else if(this.answerLang == 2){
+        answerList = this.activeWord.lang2.toLowerCase().split(", ");
+      } //mamy odpowiedni answerList
+
+      let correctCount = 0;
+      answerList.forEach(correctWord => {
+        if(inputList.includes(correctWord)){
+          correctCount++;
+        }
+      })
+
+      if(inputList.length > answerList.length){
+        correctCount -= inputList.length - answerList.length;
+        if(correctCount < 0){
+          correctCount = 0;
+        }
+      }
+
+
+      let points = correctCount/answerList.length;
+      if(!this.wasIncorrect(this.activeWord)){
+        this.result.correct += points;
+      }
+      if(points == 1){
+        this.remaining--;
+        this.words.splice(0, 1);
+        this.displayNextWord();
+      }
+      else {
+        if(this.answerLang == 2){
+          this.hintText = this.activeWord.lang1+" - "+this.activeWord.lang2;
         }
         else {
-          if(this.answerLang == 2){
-            this.hintText = this.activeWord.lang1+" - "+this.activeWord.lang2;
-          }
-          else {
-            this.hintText = this.activeWord.lang2+" - "+this.activeWord.lang1;
-          }
-          clearTimeout(this.hintTimeout);
-          this.hintVisible = true;
-          this.hintTimeout = setTimeout(() => {
-            this.hintVisible = false;
-          }, 5000);
-          this.addToDifficultWords(this.activeWord);
-          this.shuffleActiveWord(this.words);
-          this.displayNextWord();
+          this.hintText = this.activeWord.lang2+" - "+this.activeWord.lang1;
         }
-        this.answer = "";
+        clearTimeout(this.hintTimeout);
+        this.hintVisible = true;
+        this.hintTimeout = setTimeout(() => {
+          this.hintVisible = false;
+        }, 5000);
+        this.addToDifficultWords(this.activeWord);
+        this.shuffleActiveWord(this.words);
+        this.displayNextWord();
+      }
+      this.answer = "";
+    },
+    setTime(){
+      return "width: "+this.remainingTime/this.timeForAnswer*100+"%";
     }
   }
 }
@@ -338,8 +404,29 @@ button {
 .hint {
   height: 20px;
 }
-
-
+.custom-range {
+  width: 90%;
+}
+.slider {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.sliderPanel {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 90%;
+}
+.sliderPanel h3 {
+  margin: 0;
+  width: 30px;
+  text-align: center;
+}
+.time {
+  width: 90%;
+}
 
 .fade-enter-active, .fade-leave-active {
   transition: opacity 1s;

@@ -73,6 +73,7 @@
                 <md-input v-model="newWord.lang2"></md-input>
               </md-field>
             </span>
+            <p class="info">Synonimy możesz dodać, wpisując je po przecinku.</p>
             <button type="button" class="btn btn-primary" @click="addWord()" :disabled="newWord.lang1 == '' || newWord.lang2 == ''">Wstaw słówko</button>
             
             <div class="spinner-grow text-primary loadingnewword" role="status" v-if="loadingNewWord">
@@ -96,6 +97,11 @@
         </transition>
       </div>
     </transition>
+
+
+    <md-snackbar md-position="center" :md-duration="duration" :md-active.sync="snackbarActive" md-persistent>
+      {{snackbarText}}
+    </md-snackbar>
   </div>
 </template>
 
@@ -133,6 +139,9 @@ export default {
       loadingNewWord: false,
       loadingAddedDict: false,
       loadingAddedList: false,
+      snackbarActive: false,
+      duration: 3000,
+      snackbarText: "",
     }
   },
   mounted(){
@@ -221,12 +230,93 @@ export default {
     getWordTitle(word){
       return word.lang1+" - "+word.lang2;
     },
+    areArraysEqual(a, b){
+      if(a.length != b.length){
+        return false;
+      }
+      else {
+        const elNotExists = a.some(el => !b.includes(el));
+        if(elNotExists){
+          return false;
+        }
+        return true;
+      }
+    },
+    isWordAlreadyAdded(){
+      let result = -2;
+      const newList1 = this.newWord.lang1.split(", ");
+      const newList2 = this.newWord.lang2.split(", ");
+      if(this.words == null){
+        return result;
+      }
+      for(let i = 0 ; i < this.words.length ; i++){
+        let el = this.words[i];
+        const oldList1 = el.lang1.split(", ");
+        const oldList2 = el.lang2.split(", ");
+        let equal1 = false;
+        let equal2 = false;
+        if(this.areArraysEqual(newList1, oldList1)) equal1 = true;
+        else equal1 = false;
+        if(this.areArraysEqual(newList2, oldList2)) equal2 = true;
+        else equal2 = false;
+
+
+        if(equal1 == true && equal2 == false){  //znaleziono odpowiadający język1 ale inny język2
+          let list = oldList2.concat(newList2);
+          list = [...new Set(list)];  //remove duplicates
+          this.newWord.lang2 = list.join(", ");
+          result = el.id;
+          break;
+        }
+        else if(equal1 == false && equal2 == true){  //znaleziono odpowiadający język2 ale inny język1
+          let list = oldList1.concat(newList1);
+          list = [...new Set(list)];  //remove duplicates
+          this.newWord.lang1 = list.join(", ");
+          result = el.id;
+          break;
+        }
+        else if(equal1 == true && equal2 == true){    //jest identyczne słówko już wpisane
+          result = -1;
+          break;
+        }
+      }
+      return result;
+    },
+    justifyWord(text){
+      const list = text.split(",");
+      list.forEach((word, index) => {
+        list[index] = word.trim();
+      });
+      return list.join(", ");
+    },
     addWord(){
       this.loadingNewWord = true;
       this.newWord.listId = this.activeList.id;
-      this.$http.post('word/add', this.newWord).then(()=>{
-        this.getWords();
-      });
+      this.newWord.lang1 = this.justifyWord(this.newWord.lang1);
+      this.newWord.lang2 = this.justifyWord(this.newWord.lang2);
+      const whatToDo = this.isWordAlreadyAdded();
+      if(whatToDo == -1){ //nie trzeba nic robić
+        this.snackbarText = "Takie słowo już istnieje na tej liście!";
+        this.snackbarActive = true;
+        this.loadingNewWord = false;
+      }
+      else if(whatToDo == -2){
+        this.$http.post('word/add', this.newWord).then(()=>{
+          this.getWords();
+        });
+      }
+      else {
+        const updatedWord = {};
+        updatedWord.id = whatToDo;
+        updatedWord.lang1 = this.newWord.lang1;
+        updatedWord.lang2 = this.newWord.lang2;
+        this.snackbarText = "Zaktualizowano istniejące słowo!";
+        this.snackbarActive = true;
+        this.$http.post('word/update', updatedWord).then(()=>{
+          this.getWords();
+        });
+      }
+      
       this.newWord.lang1 = "";
       this.newWord.lang2 = "";
       this.$nextTick(() => this.$refs.lang1.$el.focus())
@@ -388,6 +478,11 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+.info {
+  font-size: 9pt;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .fade-enter-active, .fade-leave-active {
