@@ -22,7 +22,7 @@
           </select>
           <div v-if="labelsAll != null && namesAll != null && valuesAll != null">
             <graph-line
-                    :width="500"
+                    width="100%"
                     :height="300"
                     :shape="'normal'"
                     :axis-min="0"
@@ -44,7 +44,7 @@
 
         <div class="table" v-if="labels != null && names != null && values != null">
           <graph-line
-                  :width="700"
+                  width="100%"
                   :height="500"
                   :shape="'normal'"
                   :axis-min="0"
@@ -236,9 +236,9 @@ export default {
   flex-wrap: wrap;
 }
 .panel {
-  width: 30%;
+  width: 40%;
   height: auto;
-  min-width: 430px;
+  min-width: 300px;
   margin-right: 30px;
   display: flex;
   flex-direction: column;
@@ -248,7 +248,7 @@ export default {
   margin-left: 30px;
 }
 .table {
-  width: 40%;
+  width: 50%;
   min-width: 300px;
   height: auto;
   display: flex;

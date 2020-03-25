@@ -57,6 +57,7 @@ export default {
 }
 .md-toolbar {
   background-color: white !important;
+  
   justify-content: center;
   margin-bottom: 30px;
 }

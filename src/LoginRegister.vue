@@ -20,13 +20,13 @@
       <md-field>
         <label>Nick</label>
         <md-input v-model="registerData.nick"></md-input>
-        <span class="md-helper-text">Nie może być zbyt krótki!</span>
+        <span class="md-helper-text">Co najmniej 4-literowy</span>
       </md-field>
       
       <md-field>
         <label>Hasło</label>
         <md-input v-model="registerData.password" type="password"></md-input>
-        <span class="md-helper-text">Zadbaj o silne hasło!</span>
+        <span class="md-helper-text">Co najmniej 5-literowe</span>
       </md-field>
       
       <button type="button" class="btn btn-warning" @click="register()">Zarejestruj się</button>
@@ -139,17 +139,20 @@ export default {
 .page {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: space-around;
   align-items: flex-start;
+  flex-wrap: wrap;
   margin: 20px 30px;
 }
 .loginpanel {
-  width: 30%;
+  width: 40%;
+
+  min-width: 300px;
 }
 .registerpanel {
   margin-top: 15px;
   width: 25%;
-  margin-left: 200px;
+  min-width: 300px;
 }
 .registerpanel h1 {
   font-size: 20pt;

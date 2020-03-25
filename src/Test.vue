@@ -40,13 +40,16 @@
 
       <transition name="fade">
         <div class="table" v-if="testRunning">
-          <p class="activeWord" v-if="answerLang == 2">{{activeWord.lang1}}</p>
-          <p class="activeWord" v-else>{{activeWord.lang2}}</p>
+          <div class="activeWord">
+            <p v-if="answerLang == 2">{{activeWord.lang1}}</p>
+            <p v-else>{{activeWord.lang2}}</p>
+            <p class="wordsToWrite" v-if="wordsToWrite > 1">({{wordsToWrite}})</p>
+          </div>
 
           <md-field class="answer">
             <label class="labellang" v-if="answerLang == 1">{{activeDictionary.lang1}}</label>
             <label class="labellang" v-else>{{activeDictionary.lang2}}</label>
-            <md-input ref="answer" v-model="answer"></md-input>
+            <md-input v-focus v-model="answer"></md-input>
           </md-field>
           <div class="progress time" v-if="timeForAnswer != 0">
             <div class="progress-bar bg-info" role="progressbar" :style="setTime()" aria-valuemin="0" :aria-valuemax="timeForAnswer"></div>
@@ -61,6 +64,11 @@
           <button type="button" class="btn btn-primary accept" @click="accept()">Zatwierdź</button>
         </div>
       </transition>
+      <div class="rightPanel">
+        <div class="progress remaining-progressbar" v-if="testRunning">
+          <div class="progress-bar-striped progress-bar-animated bg-info" role="progressbar" :style="setRemaining()" aria-valuemin="0" :aria-valuemax="result.all"></div>
+        </div>
+      </div>
 
 
       <md-dialog-alert
@@ -85,6 +93,13 @@ export default {
   name: 'Test',
   components: {
     Spinner
+  },
+  directives: {
+    focus: {
+      inserted: function (el) {
+        el.focus()
+      }
+    }
   },
   data(){
     return {
@@ -115,6 +130,7 @@ export default {
       remainingTime: 0,
       answerInterval: null,
       wasLate: false,
+      wordsToWrite: 1,
     }
   },
   mounted(){
@@ -218,6 +234,12 @@ export default {
         return;
       }
       this.activeWord = this.words[0];
+      if(this.answerLang == 1){
+        this.wordsToWrite = this.activeWord.lang1.split(", ").length;
+      }
+      else if(this.answerLang == 2){
+        this.wordsToWrite = this.activeWord.lang2.split(", ").length;
+      } //mamy odpowiedni answerList
       if(this.timeForAnswer != 0){  //jeśli jest ustawiony czas
         if(!this.wasLate){
           this.remainingTime = parseInt(this.timeForAnswer);
@@ -236,7 +258,7 @@ export default {
         }, 1000);
       }
       
-      this.$nextTick(() => this.$refs.answer.$el.focus());
+      
       
     },
     addToDifficultWords(word){
@@ -318,6 +340,9 @@ export default {
     },
     setTime(){
       return "width: "+this.remainingTime/this.timeForAnswer*100+"%";
+    },
+    setRemaining(){
+      return "height: "+this.result.correct/this.result.all*100+"% ; width: 100%";
     }
   }
 }
@@ -331,9 +356,9 @@ export default {
   flex-wrap: wrap;
 }
 .panel {
-  width: 30%;
+  width: 40%;
   height: auto;
-  min-width: 430px;
+  min-width: 300px;
   margin-right: 30px;
   display: flex;
   flex-direction: column;
@@ -389,6 +414,11 @@ button {
   font-size: 25pt;
   font-family: Calibri;
   text-align: center;
+  display: flex;
+  flex-direction: row;
+}
+.wordsToWrite {
+  margin-left: .5rem;
 }
 .answer {
   width: 50%;
@@ -426,6 +456,20 @@ button {
 }
 .time {
   width: 90%;
+}
+.rightPanel {
+  flex: 1;
+  margin-right: 30px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+.remaining-progressbar {
+  min-width: 80px;
+  min-height: 300px;
+  display: flex;
+  align-items: flex-end;
+  float: left;
 }
 
 .fade-enter-active, .fade-leave-active {

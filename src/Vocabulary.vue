@@ -20,7 +20,7 @@
           <label class="selectLabel" v-if="activeDictionary != null">Wybierz listę</label>
           <div class="dualWithDelete">
             <select class="custom-select" v-model="activeList" @change="getWords()" v-if="lists != null && activeDictionary != null">
-              <option :value="list" :key="list.id" v-for="list in lists">{{list.title}}</option>
+              <option :value="list" :key="list.id" v-for="list in lists">{{list.title}} ({{words.length}})</option>
             </select>
             <select class="custom-select" v-if="lists == null && activeDictionary != null">
               <option disabled selected>Brak dostępnych list</option>
@@ -370,9 +370,9 @@ export default {
   flex-wrap: wrap;
 }
 .panel {
-  width: 30%;
+  width: 40%;
   height: auto;
-  min-width: 430px;
+  min-width: 300px;
   margin-right: 30px;
   display: flex;
   flex-direction: column;
@@ -387,6 +387,9 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+.md-input {
+  width: 40% !important;
 }
 .dual {
   display: flex;
