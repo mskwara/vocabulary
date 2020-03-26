@@ -52,7 +52,7 @@ export default {
   background-repeat: no-repeat;
   background-position: center; 
   position: relative;
-  margin: 0 10px;
+  margin: 0 10px 10px 0;
 
   transition: 0.3s;
 }

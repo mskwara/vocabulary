@@ -40,35 +40,36 @@
 
       <transition name="fade">
         <div class="table" v-if="testRunning">
-          <div class="activeWord">
-            <p v-if="answerLang == 2">{{activeWord.lang1}}</p>
-            <p v-else>{{activeWord.lang2}}</p>
-            <p class="wordsToWrite" v-if="wordsToWrite > 1">({{wordsToWrite}})</p>
-          </div>
+          <div class="table-test">
+            <div class="activeWord">
+              <p v-if="answerLang == 2">{{activeWord.lang1}}</p>
+              <p v-else>{{activeWord.lang2}}</p>
+              <p class="wordsToWrite" v-if="wordsToWrite > 1">({{wordsToWrite}})</p>
+            </div>
 
-          <md-field class="answer">
-            <label class="labellang" v-if="answerLang == 1">{{activeDictionary.lang1}}</label>
-            <label class="labellang" v-else>{{activeDictionary.lang2}}</label>
-            <md-input v-focus v-model="answer"></md-input>
-          </md-field>
-          <div class="progress time" v-if="timeForAnswer != 0">
-            <div class="progress-bar bg-info" role="progressbar" :style="setTime()" aria-valuemin="0" :aria-valuemax="timeForAnswer"></div>
+            <md-field class="answer">
+              <label class="labellang" v-if="answerLang == 1">{{activeDictionary.lang1}}</label>
+              <label class="labellang" v-else>{{activeDictionary.lang2}}</label>
+              <md-input v-focus v-model="answer"></md-input>
+            </md-field>
+            <div class="progress time" v-if="timeForAnswer != 0">
+              <div class="progress-bar bg-info" role="progressbar" :style="setTime()" aria-valuemin="0" :aria-valuemax="timeForAnswer"></div>
+            </div>
+            <div class="hint">
+              <transition name="fade">
+                <div v-if="hintVisible">
+                  <p class="help">{{hintText}}</p>
+                </div>
+              </transition>
+            </div>
+            <button type="button" class="btn btn-primary accept" @click="accept()">Zatwierdź</button>
           </div>
-          <div class="hint">
-            <transition name="fade">
-              <div v-if="hintVisible">
-                <p class="help">{{hintText}}</p>
-              </div>
-            </transition>
+          <div class="progress remaining-progressbar">
+            <div class="progress-bar-striped progress-bar-animated bg-info" role="progressbar" :style="setRemaining()" aria-valuemin="0" :aria-valuemax="result.all"></div>
           </div>
-          <button type="button" class="btn btn-primary accept" @click="accept()">Zatwierdź</button>
         </div>
       </transition>
-      <div class="rightPanel">
-        <div class="progress remaining-progressbar" v-if="testRunning">
-          <div class="progress-bar-striped progress-bar-animated bg-info" role="progressbar" :style="setRemaining()" aria-valuemin="0" :aria-valuemax="result.all"></div>
-        </div>
-      </div>
+
 
 
       <md-dialog-alert
@@ -355,20 +356,35 @@ export default {
   justify-content: flex-start;
   flex-wrap: wrap;
 }
+@media only screen and (max-width: 600px) {
+  .page {
+    justify-content: center;
+  }
+  .answer {
+    min-width: 200px !important;
+  }
+  .remaining-progressbar {
+    min-width: 40px !important;
+  }
+}
 .panel {
   width: 40%;
   height: auto;
   min-width: 300px;
-  margin-right: 30px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
 .table {
-  width: 40%;
+  flex: 1;
   min-width: 300px;
   height: auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+.table-test {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -382,6 +398,7 @@ export default {
 button {
   width: 90% !important;
   margin-top: 30px;
+  margin-bottom: 30px;
 }
 .leftinput {
   margin-right: 20px;
@@ -423,10 +440,9 @@ button {
 .answer {
   width: 50%;
   min-width: 300px;
-
 }
 .accept {
-  width: 50% !important;
+  width: 90% !important;
 }
 .help {
   margin: 0;
@@ -457,16 +473,9 @@ button {
 .time {
   width: 90%;
 }
-.rightPanel {
-  flex: 1;
-  margin-right: 30px;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-}
 .remaining-progressbar {
   min-width: 80px;
-  min-height: 300px;
+  min-height: 250px;
   display: flex;
   align-items: flex-end;
   float: left;

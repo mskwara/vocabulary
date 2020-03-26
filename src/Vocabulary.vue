@@ -13,7 +13,7 @@
               <option disabled selected>Brak dostępnych słowników</option>
             </select>
             <transition name="fade">
-              <img class="deleteSelect" src="./assets/stop.png" @click="deleteDictionary()" v-if="activeDictionary != null" />
+              <img class="iconSelect" src="./assets/stop.png" @click="deleteDictionary()" v-if="activeDictionary != null" />
             </transition>
           </div>
 
@@ -26,7 +26,10 @@
               <option disabled selected>Brak dostępnych list</option>
             </select>
             <transition name="fade">
-              <img class="deleteSelect" src="./assets/stop.png" @click="deleteList()" v-if="activeList != null" />
+              <div style="display: flex ; flex-direction: row" v-if="activeList != null">
+                <!-- <img class="iconSelect scale" src="./assets/share.svg" @click="shareList()" /> -->
+                <img class="iconSelect rotate" src="./assets/stop.png" @click="deleteList()" />
+              </div>
             </transition>
           </div>
 
@@ -373,7 +376,7 @@ export default {
   width: 40%;
   height: auto;
   min-width: 300px;
-  margin-right: 30px;
+
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -407,6 +410,7 @@ export default {
 }
 button {
   width: 90% !important;
+  margin-bottom: 30px;
 }
 .leftinput {
   margin-right: 20px;
@@ -436,22 +440,34 @@ button {
 }
 .delete {
   width: 10px;
+  margin-left: 5px;
   transition: 0.3s;
 }
 .delete:hover {
   transform: rotate(90deg);
 }
-.deleteSelect {
+.iconSelect {
   width: 15px;
-  transition: 0.3s;
+  
   margin-left: 10px;
 }
-.deleteSelect:hover {
+.rotate {
+  transition: 0.3s;
+}
+.rotate:hover {
   transform: rotate(90deg);
+}
+.scale {
+  transition: 0.3s;
+}
+.scale:hover {
+  transform: scale(1.1);
 }
 .difficultyDot {
   width: 7px;
+  min-width: 7px;
   height: 7px;
+  min-height: 7px;
   border-radius: 4px;
   border: 1px solid black;
   margin-left: 20px;

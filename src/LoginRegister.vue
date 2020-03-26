@@ -148,6 +148,7 @@ export default {
   width: 40%;
 
   min-width: 300px;
+  margin-bottom: 30px;
 }
 .registerpanel {
   margin-top: 15px;
