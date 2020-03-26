@@ -6,8 +6,12 @@
     <div class="field test" @click="setRoute('test')">
       Test
     </div>
+    
     <div class="field stats" @click="setRoute('stats')">
       Statystyki
+    </div>
+    <div class="field competition" @click="setRoute('competition')">
+      Rywalizacja
     </div>
   </div>
 </template>
@@ -58,6 +62,9 @@ export default {
 }
 .test {
   background-image: url('./assets/test.png');
+}
+.competition {
+  background-image: url('./assets/competition.jpg');
 }
 .vocabulary {
   background-image: url('./assets/vocabulary.jpg');

@@ -4,6 +4,7 @@ import Home from './Home.vue'
 import Vocabulary from './Vocabulary.vue'
 import Test from './Test.vue'
 import Stats from './Stats.vue'
+import Competition from './Competition.vue'
 import LoginRegister from './LoginRegister.vue'
 import God from './God.vue'
 import VueMaterial from 'vue-material'
@@ -32,6 +33,7 @@ const routes = [
       { path: '/vocabulary', name: 'vocabulary', component: Vocabulary },
       { path: '/test', name: 'test', component: Test },
       { path: '/stats', name: 'stats', component: Stats },
+      { path: '/competition', name: 'competition', component: Competition },
       
     ]
   },

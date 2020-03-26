@@ -20,14 +20,15 @@
           <label class="selectLabel" v-if="activeDictionary != null">Wybierz listę</label>
           <div class="dualWithDelete">
             <select class="custom-select" v-model="activeList" @change="getWords()" v-if="lists != null && activeDictionary != null">
-              <option :value="list" :key="list.id" v-for="list in lists">{{list.title}} ({{words.length}})</option>
+              <option :value="list" :key="list.id" v-for="list in lists">{{list.title}} ({{words != null ? words.length : 0}})</option>
             </select>
             <select class="custom-select" v-if="lists == null && activeDictionary != null">
               <option disabled selected>Brak dostępnych list</option>
             </select>
             <transition name="fade">
               <div style="display: flex ; flex-direction: row" v-if="activeList != null">
-                <!-- <img class="iconSelect scale" src="./assets/share.svg" @click="shareList()" /> -->
+                <img class="iconSelect scale" src="./assets/share.svg" @click="shareList()" v-if="activeList.shared == 0 && words != null && words.length > 0" />
+                <img class="iconSelect scale" src="./assets/unshare.svg" @click="unshareList()" v-if="activeList.shared == 1 && words != null && words.length > 0" />
                 <img class="iconSelect rotate" src="./assets/stop.png" @click="deleteList()" />
               </div>
             </transition>
@@ -105,6 +106,11 @@
     <md-snackbar md-position="center" :md-duration="duration" :md-active.sync="snackbarActive" md-persistent>
       {{snackbarText}}
     </md-snackbar>
+
+    <md-dialog-alert
+        :md-active.sync="sharedAlert"
+        md-title="Sukces!"
+        :md-content="sharedAlertText" />
   </div>
 </template>
 
@@ -138,13 +144,15 @@ export default {
       dictionaries: null,
       lists: null,
       words: null,
-      loading: true,
+      loading: false,
       loadingNewWord: false,
       loadingAddedDict: false,
       loadingAddedList: false,
       snackbarActive: false,
       duration: 3000,
       snackbarText: "",
+      sharedAlert: false,
+      sharedAlertText: "",
     }
   },
   mounted(){
@@ -190,6 +198,7 @@ export default {
               this.activeList = null;
               this.loadingAddedList = false;
               this.loading = false;
+              this.words = null;
             }
           });
         }
@@ -199,6 +208,8 @@ export default {
           this.activeList = null;
           this.loading = false;
           this.loadingFirstDictionary = false;
+          this.loadingAddedList = false;
+          this.loadingNewWord = false;
         }
       });
     },
@@ -217,7 +228,12 @@ export default {
     getWords(){
       if(this.activeList != null){
         this.$http.get('words/'+this.activeList.id).then(response => {
-          this.words = response.body;
+          if(response.body != null){
+            this.words = response.body;
+          }
+          else {
+            this.words = null;
+          }
           this.loading = false;
           this.loadingNewWord = false;
         });
@@ -360,6 +376,28 @@ export default {
         });
       }
     },
+    shareList(){
+      let sharedList = {};
+      sharedList.listId = this.activeList.id;
+      sharedList.lang1 = this.activeDictionary.lang1;
+      sharedList.lang2 = this.activeDictionary.lang2;
+      sharedList.author = service.nick;
+      sharedList.title = this.activeList.title;
+      this.$http.post('list/share', sharedList).then(() => {
+        this.sharedAlertText = "Udało się udostępnić innym użytkownikom Twoją bieżącą listę!";
+        this.sharedAlert = true;
+        this.activeList.shared = 1;
+      });
+    },
+    unshareList(){
+      let unsharedList = {};
+      unsharedList.listId = this.activeList.id;
+      this.$http.post('list/unshare', unsharedList).then(() => {
+        this.sharedAlertText = "Twoja lista nie będzie już widoczna.";
+        this.sharedAlert = true;
+        this.activeList.shared = 0;
+      });
+    }
   }
 }
 </script>

@@ -634,6 +634,20 @@ $app->post('/api/dictionary/delete',
             echo "Error: " . $sql4 . "<br>" . $conn->error;
         }
 
+        $sql5 = 'DELETE FROM sharedLists WHERE listId IN (' . implode(',', array_map('intval', $listsIds)) . ')';
+        if ($conn->query($sql5) === TRUE) {  
+            echo "SharedLists deleted successfully";
+        } else {
+            echo "Error: " . $sql5 . "<br>" . $conn->error;
+        }
+
+        $sql6 = 'DELETE FROM sharedStats WHERE sharedListId IN (' . implode(',', array_map('intval', $listsIds)) . ')';
+        if ($conn->query($sql6) === TRUE) {  
+            echo "SharedLists stats deleted successfully";
+        } else {
+            echo "Error: " . $sql6 . "<br>" . $conn->error;
+        }
+
         $conn->close();
     }
 );
@@ -687,9 +701,241 @@ $app->post('/api/list/delete',
             echo "Error: " . $sql4 . "<br>" . $conn->error;
         }
 
+        $sql5 = "DELETE FROM sharedLists WHERE listId = ?";
+        $stmt = $conn->prepare($sql5);
+        $stmt->bind_param('i', $listId);
+
+
+        if ($stmt->execute() === TRUE) {
+            echo "Deleted shared lists successfully";
+        } else {
+            echo "Error: " . $sql5 . "<br>" . $conn->error;
+        }
+
+        $sql6 = "DELETE FROM sharedStats WHERE sharedListId = ?";
+        $stmt = $conn->prepare($sql6);
+        $stmt->bind_param('i', $listId);
+
+
+        if ($stmt->execute() === TRUE) {
+            echo "Shared stats deleted successfully";
+        } else {
+            echo "Error: " . $sql6 . "<br>" . $conn->error;
+        }
+
         $conn->close();
     }
 );
 
+$app->post('/api/list/share',
+     function (Request $request, Response $response, array $args) {
+
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "vocpassword123";
+        $dbname = "32213694_vocabulary";
+
+        $requestData = $request->getParsedBody();
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $sql = "INSERT INTO sharedLists (listId, lang1, lang2, title, author)
+        VALUES(?, ?, ?, ?, ?)";
+
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('issss', $requestData['listId'], $requestData['lang1'],
+         $requestData['lang2'], $requestData['title'], $requestData['author']);
+
+      if ($stmt->execute() === TRUE) {
+          echo "New record created successfully";
+      } else {
+          echo "Error: " . $sql . "<br>" . $conn->error;
+      }
+
+      $sql1 = "UPDATE lists SET shared = 1 WHERE id = ?";
+
+        $stmt = $conn->prepare($sql1);
+        $stmt->bind_param('i', $requestData['listId']);
+
+
+      if ($stmt->execute() === TRUE) {
+          echo "List updated successfully";
+      } else {
+          echo "Error: " . $sql1 . "<br>" . $conn->error;
+      }
+
+      $conn->close();
+    }
+);
+
+$app->post('/api/list/unshare',
+     function (Request $request, Response $response, array $args) {
+
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "vocpassword123";
+        $dbname = "32213694_vocabulary";
+
+        $requestData = $request->getParsedBody();
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $sql = "DELETE FROM sharedLists WHERE listId = ?";
+
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('i', $requestData['listId']);
+
+      if ($stmt->execute() === TRUE) {
+          echo "Shared list removed successfully";
+      } else {
+          echo "Error: " . $sql . "<br>" . $conn->error;
+      }
+
+      $sql1 = "UPDATE lists SET shared = 0 WHERE id = ?";
+
+        $stmt = $conn->prepare($sql1);
+        $stmt->bind_param('i', $requestData['listId']);
+
+
+      if ($stmt->execute() === TRUE) {
+          echo "List updated successfully";
+      } else {
+          echo "Error: " . $sql1 . "<br>" . $conn->error;
+      }
+
+      $conn->close();
+    }
+);
+
+$app->get('/api/sharedLists',
+    function (Request $request, Response $response, array $args) {
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "vocpassword123";
+        $dbname = "32213694_vocabulary";
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $sql = "SELECT * FROM sharedLists";
+        $result = $conn->query($sql);
+        $array = [];
+
+        if ($result->num_rows > 0) {
+            // output data of each row
+            while($row = $result->fetch_assoc()) {
+                $array[] = $row;
+            }
+        } else {
+            echo "0 results";
+        }
+        $conn->close();
+        return $response->withJson($array);
+    }
+);
+
+$app->post('/api/sharedStats/add',
+     function (Request $request, Response $response, array $args) {
+
+    $servername = "serwer2001916.home.pl";
+    $username = "32213694_vocabulary";
+    $password = "vocpassword123";
+    $dbname = "32213694_vocabulary";
+
+    $requestData = $request->getParsedBody();
+    // Create connection
+    $conn = new mysqli($servername, $username, $password, $dbname);
+    // Check connection
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+    $nick = $requestData['nick'];
+    $listId = $requestData['listId'];
+    $sqlget = "SELECT id FROM sharedStats WHERE nick = \"$nick\" AND sharedListId = \"$listId\"";
+
+    $result = $conn->query($sqlget);
+    $isAlready = 0;
+
+    if ($result->num_rows > 0) {
+        $isAlready = 1;
+    } else {
+        $isAlready = 0;
+    }
+    if($isAlready == 0){
+        $sql = "INSERT INTO sharedStats (nick, sharedListId, correct, allCount)
+        VALUES(?, ?, ?, ?)";
+
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('sidi',$requestData['nick'], $requestData['listId'], $requestData['correct'], $requestData['all']);
+
+
+        if ($stmt->execute() === TRUE) {
+            echo "New record created successfully";
+        } else {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
+    }
+    else {
+        $sql = "UPDATE sharedStats SET correct = ?, allCount = ?, attempts = attempts + 1 WHERE nick = ? AND sharedListId = ?";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('iisi',$requestData['correct'], $requestData['all'], $requestData['nick'], $requestData['listId']);
+
+
+        if ($stmt->execute() === TRUE) {
+            echo "Record updated successfully";
+        } else {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
+    }
+
+    
+
+      $conn->close();
+      return $requestData;
+  }
+
+);
+
+$app->get('/api/scoreboard/{listId}',
+    function (Request $request, Response $response, array $args) {
+        $servername = "serwer2001916.home.pl";
+        $username = "32213694_vocabulary";
+        $password = "vocpassword123";
+        $dbname = "32213694_vocabulary";
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $listId = $args['listId'];
+        $sql = "SELECT * FROM sharedStats WHERE sharedListId = $listId";
+        $result = $conn->query($sql);
+        $array = [];
+
+        if ($result->num_rows > 0) {
+            // output data of each row
+            while($row = $result->fetch_assoc()) {
+                $array[] = $row;
+            }
+        } else {
+            echo "0 results";
+        }
+        $conn->close();
+        return $response->withJson($array);
+    }
+);
 
 $app->run();
