@@ -85,7 +85,7 @@
                 <transition name="fade">
                     <div class="table" v-if="testRunning">
                         <div class="table-test">
-                            <div class="activeWord">
+                            <div class="activeWord" :style="getActiveWordFontSize()">
                                 <p v-if="answerLang == 2">{{activeWord.lang1}}</p>
                                 <p v-else>{{activeWord.lang2}}</p>
                                 <p class="wordsToWrite" v-if="wordsToWrite > 1">({{wordsToWrite}})</p>
@@ -111,7 +111,7 @@
                             <div class="hint">
                                 <transition name="fade">
                                     <div v-if="hintVisible">
-                                        <p class="help">{{hintText}}</p>
+                                        <p class="help" :style="getHintFontSize()">{{hintText}}</p>
                                     </div>
                                 </transition>
                             </div>
@@ -424,6 +424,25 @@ export default {
                 ((this.result.all - this.remaining) / this.result.all) * 100 +
                 "% ; width: 100%"
             );
+        },
+        getActiveWordFontSize() {
+            const len =
+                this.answerLang == 2
+                    ? this.activeWord.lang1.length
+                    : this.activeWord.lang2.length;
+            let size = 25;
+            if (len >= 25) {
+                size -= (len - 25) * 0.9;
+            }
+            return "font-size: " + size + "pt";
+        },
+        getHintFontSize() {
+            const len = this.hintText.length;
+            let size = 11;
+            if (len >= 40) {
+                size -= (len - 40) * 0.15;
+            }
+            return "font-size: " + size + "pt";
         }
     }
 };
@@ -468,6 +487,7 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
+    max-width: 400px;
 }
 .dual {
     display: flex;
@@ -523,9 +543,11 @@ button {
 }
 .accept {
     width: 90% !important;
+    max-width: 250px;
 }
 .help {
     margin: 0;
+    font-size: 11pt;
 }
 .hint {
     height: 20px;
