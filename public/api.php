@@ -890,7 +890,7 @@ $app->post('/api/sharedStats/add',
         $sql = "UPDATE sharedStats SET correct = ?, allCount = ?, attempts = attempts + 1 WHERE nick = ? AND sharedListId = ?";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('iisi',$requestData['correct'], $requestData['all'], $requestData['nick'], $requestData['listId']);
+        $stmt->bind_param('disi',$requestData['correct'], $requestData['all'], $requestData['nick'], $requestData['listId']);
 
 
         if ($stmt->execute() === TRUE) {

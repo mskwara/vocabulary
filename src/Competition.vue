@@ -231,6 +231,8 @@ export default {
                     this.getScoreboard();
                 } else {
                     this.activeList = null;
+                    this.loadingNewWords = false;
+                    this.loadingScoreboard = false;
                 }
                 this.loading = false;
             });
@@ -252,13 +254,13 @@ export default {
                 this.$http
                     .get("scoreboard/" + this.activeList.listId)
                     .then(response => {
+                        this.loadingScoreboard = false;
                         this.scoreboard = response.body;
                         this.scoreboard.sort((a, b) => {
                             return (
                                 b.correct / b.allCount - a.correct / a.allCount
                             );
                         });
-                        this.loadingScoreboard = false;
                     });
             } else {
                 this.scoreboard = null;
@@ -412,8 +414,7 @@ export default {
         setRemaining() {
             return (
                 "height: " +
-                (this.remainingTime / this.timeForAnswer / this.result.all) *
-                    100 +
+                ((this.result.all - this.remaining) / this.result.all) * 100 +
                 "% ; width: 100%"
             );
         },
@@ -469,7 +470,7 @@ export default {
     min-width: 300px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
 }
 .words {
